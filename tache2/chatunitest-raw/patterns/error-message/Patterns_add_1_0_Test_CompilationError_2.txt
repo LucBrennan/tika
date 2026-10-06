@@ -1,0 +1,123 @@
+package org.apache.tika.mime;
+
+import org.apache.tika.mime.*;
+import java.io.Serializable;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.SortedMap;
+import java.util.TreeMap;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.*;
+import org.junit.jupiter.api.*;
+import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class Patterns_add_1_0_Test {
+
+    private Patterns patterns;
+
+    private MediaTypeRegistry registry;
+
+    @BeforeEach
+    public void setUp() {
+        registry = mock(MediaTypeRegistry.class);
+        patterns = new Patterns(registry);
+    }
+
+    @Test
+    public void testAddName() throws MimeTypeException {
+        MimeType type = new MimeType(MediaType.parse("text/plain"));
+        patterns.add("example", false, type);
+        assertEquals(type, patterns.names.get("example"));
+    }
+
+    @Test
+    public void testAddExtension() throws MimeTypeException {
+        MimeType type = new MimeType(MediaType.parse("image/jpeg"));
+        patterns.add("jpg", false, type);
+        assertEquals(type, patterns.extensions.get("jpg"));
+    }
+
+    @Test
+    public void testAddGlob() throws MimeTypeException {
+        MimeType type = new MimeType(MediaType.parse("application/pdf"));
+        patterns.add("*.pdf", false, type);
+        assertEquals(type, patterns.globs.get("*.pdf"));
+    }
+
+    @Test
+    public void testAddNameConflict() throws MimeTypeException {
+        MimeType type1 = new MimeType(MediaType.parse("text/plain"));
+        MimeType type2 = new MimeType(MediaType.parse("application/xml"));
+        patterns.add("example", false, type1);
+        assertThrows(MimeTypeException.class, () -> patterns.add("example", false, type2));
+    }
+
+    @Test
+    public void testAddExtensionConflict() throws MimeTypeException {
+        MimeType type1 = new MimeType(MediaType.parse("image/jpeg"));
+        MimeType type2 = new MimeType(MediaType.parse("image/png"));
+        patterns.add("jpg", false, type1);
+        assertThrows(MimeTypeException.class, () -> patterns.add("jpg", false, type2));
+    }
+
+    @Test
+    public void testAddGlobConflict() throws MimeTypeException {
+        MimeType type1 = new MimeType(MediaType.parse("application/pdf"));
+        MimeType type2 = new MimeType(MediaType.parse("application/zip"));
+        patterns.add("*.pdf", false, type1);
+        assertThrows(MimeTypeException.class, () -> patterns.add("*.pdf", false, type2));
+    }
+
+    @Test
+    public void testAddNameWithJavaRegex() throws MimeTypeException {
+        MimeType type = new MimeType(MediaType.parse("text/plain"));
+        patterns.add("(?i)example", true, type);
+        assertEquals(type, patterns.names.get("example"));
+    }
+
+    @Test
+    public void testAddExtensionWithJavaRegex() throws MimeTypeException {
+        MimeType type = new MimeType(MediaType.parse("image/jpeg"));
+        patterns.add("(?i)jpg", true, type);
+        assertEquals(type, patterns.extensions.get("jpg"));
+    }
+
+    @Test
+    public void testAddGlobWithJavaRegex() throws MimeTypeException {
+        MimeType type = new MimeType(MediaType.parse("application/pdf"));
+        patterns.add("(?i)\\.pdf$", true, type);
+        assertEquals(type, patterns.globs.get("*.pdf"));
+    }
+
+    @Test
+    public void testAddNameWithInvalidRegex() {
+        assertThrows(MimeTypeException.class, () -> patterns.add("example*", false, new MimeType(MediaType.parse("text/plain"))));
+    }
+
+    @Test
+    public void testAddExtensionWithInvalidRegex() {
+        assertThrows(MimeTypeException.class, () -> patterns.add("jpg*", false, new MimeType(MediaType.parse("image/jpeg"))));
+    }
+
+    @Test
+    public void testAddGlobWithInvalidRegex() {
+        assertThrows(MimeTypeException.class, () -> patterns.add("*.pdf*", false, new MimeType(MediaType.parse("application/pdf"))));
+    }
+
+    @Test
+    public void testAddNameWithEmptyString() {
+        assertThrows(IllegalArgumentException.class, () -> patterns.add("", false, new MimeType(MediaType.parse("text/plain"))));
+    }
+}
+
+--------------------------------------------
+Error in Patterns_add_1_0_Test: line 11 : package org.mockito.junit.jupiter does not exist
+Error in Patterns_add_1_0_Test: line 33 : names has private access in org.apache.tika.mime.Patterns
+Error in Patterns_add_1_0_Test: line 40 : extensions has private access in org.apache.tika.mime.Patterns
+Error in Patterns_add_1_0_Test: line 47 : globs has private access in org.apache.tika.mime.Patterns
+Error in Patterns_add_1_0_Test: line 78 : names has private access in org.apache.tika.mime.Patterns
+Error in Patterns_add_1_0_Test: line 85 : extensions has private access in org.apache.tika.mime.Patterns
+Error in Patterns_add_1_0_Test: line 92 : globs has private access in org.apache.tika.mime.Patterns

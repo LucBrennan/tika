@@ -1,0 +1,137 @@
+package org.apache.tika.mime;
+
+import org.apache.tika.mime.MediaType;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
+import java.io.Serializable;
+import java.nio.charset.Charset;
+import org.mockito.*;
+import org.junit.jupiter.api.*;
+import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
+import java.util.SortedMap;
+import java.util.TreeMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+@ExtendWith(MockitoExtension.class)
+public class MediaType_audio_1_0_Test {
+
+    private MediaType audio;
+
+    @BeforeEach
+    public void setUp() {
+        audio = MediaType.audio;
+    }
+
+    @Test
+    public void testNullInput() {
+        assertNull(audio(null));
+    }
+
+    @Test
+    public void testEmptyStringInput() {
+        assertNull(audio(""));
+    }
+
+    @Test
+    public void testInvalidTypeInput() {
+        assertNull(audio("invalid/type"));
+    }
+
+    @ParameterizedTest
+    @CsvSource({ "audio/mp3", "audio/wav", "audio/ogg", "audio/mpeg", "audio/x-wav" })
+    public void testValidTypeInputs(String type) {
+        MediaType expected = MediaType.parse("audio/" + type);
+        MediaType result = invokePrivateMethod(audio, "audio", type);
+        assertEquals(expected, result);
+    }
+
+    @Test
+    public void testWithParameters() {
+        MediaType expected = MediaType.parse("audio/mp3; charset=utf-8");
+        MediaType result = invokePrivateMethod(audio, "audio", "mp3; charset=utf-8");
+        assertEquals(expected, result);
+    }
+
+    @Test
+    public void testWithSpecialCharacters() {
+        MediaType expected = MediaType.parse("audio/mp3; name=value; charset=iso-8859-1");
+        MediaType result = invokePrivateMethod(audio, "audio", "mp3; name=value; charset=iso-8859-1");
+        assertEquals(expected, result);
+    }
+
+    @Test
+    public void testWithMultipleParameters() {
+        MediaType expected = MediaType.parse("audio/mp3; name=value; charset=iso-8859-1; other=param");
+        MediaType result = invokePrivateMethod(audio, "audio", "mp3; name=value; charset=iso-8859-1; other=param");
+        assertEquals(expected, result);
+    }
+
+    @Test
+    public void testWithCharsetAndParameters() {
+        MediaType expected = MediaType.parse("audio/mp3; charset=utf-8; name=value");
+        MediaType result = invokePrivateMethod(audio, "audio", "mp3; charset=utf-8; name=value");
+        assertEquals(expected, result);
+    }
+
+    @Test
+    public void testWithCharsetAndMultipleParameters() {
+        MediaType expected = MediaType.parse("audio/mp3; charset=utf-8; name=value; other=param");
+        MediaType result = invokePrivateMethod(audio, "audio", "mp3; charset=utf-8; name=value; other=param");
+        assertEquals(expected, result);
+    }
+
+    @Test
+    public void testWithCharsetAndMultipleParametersInDifferentOrder() {
+        MediaType expected = MediaType.parse("audio/mp3; charset=utf-8; name=value; other=param");
+        MediaType result = invokePrivateMethod(audio, "audio", "mp3; name=value; charset=utf-8; other=param");
+        assertEquals(expected, result);
+    }
+
+    @Test
+    public void testWithCharsetAndMultipleParametersInDifferentOrderAndSpecialCharacters() {
+        MediaType expected = MediaType.parse("audio/mp3; charset=utf-8; name=value; other=param; special=char");
+        MediaType result = invokePrivateMethod(audio, "audio", "mp3; name=value; charset=utf-8; other=param; special=char");
+        assertEquals(expected, result);
+    }
+
+    @Test
+    public void testWithCharsetAndMultipleParametersInDifferentOrderAndSpecialCharactersAndMultipleParameters() {
+        MediaType expected = MediaType.parse("audio/mp3; charset=utf-8; name=value; other=param; special=char; another=param");
+        MediaType result = invokePrivateMethod(audio, "audio", "mp3; name=value; charset=utf-8; other=param; special=char; another=param");
+        assertEquals(expected, result);
+    }
+
+    private <T> T invokePrivateMethod(Object obj, String methodName, Object... args) throws Exception {
+        Class<?> clazz = obj.getClass();
+        Method method = clazz.getDeclaredMethod(methodName, args.getClass());
+        method.setAccessible(true);
+        return (T) method.invoke(obj, args);
+    }
+}
+
+--------------------------------------------
+Error in MediaType_audio_1_0_Test: line 32 : cannot find symbol
+  symbol:   variable audio
+  location: class org.apache.tika.mime.MediaType
+Error in MediaType_audio_1_0_Test: line 37 : cannot find symbol
+  symbol:   method audio(<nulltype>)
+  location: class org.apache.tika.mime.MediaType_audio_1_0_Test
+Error in MediaType_audio_1_0_Test: line 42 : cannot find symbol
+  symbol:   method audio(java.lang.String)
+  location: class org.apache.tika.mime.MediaType_audio_1_0_Test
+Error in MediaType_audio_1_0_Test: line 47 : cannot find symbol
+  symbol:   method audio(java.lang.String)
+  location: class org.apache.tika.mime.MediaType_audio_1_0_Test
+Error in MediaType_audio_1_0_Test: line 116 : cannot find symbol
+  symbol:   class Method
+  location: class org.apache.tika.mime.MediaType_audio_1_0_Test

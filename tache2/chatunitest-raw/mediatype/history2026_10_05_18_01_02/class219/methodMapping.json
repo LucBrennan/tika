@@ -1,0 +1,50 @@
+{
+  "method0": {
+    "methodName": "add",
+    "signature": "add(String, MimeType)",
+    "className": "Patterns",
+    "packageName": "org.apache.tika.mime"
+  },
+  "method1": {
+    "methodName": "add",
+    "signature": "add(String, boolean, MimeType)",
+    "className": "Patterns",
+    "packageName": "org.apache.tika.mime"
+  },
+  "method2": {
+    "methodName": "addName",
+    "signature": "addName(String, MimeType)",
+    "className": "Patterns",
+    "packageName": "org.apache.tika.mime"
+  },
+  "method3": {
+    "methodName": "addExtension",
+    "signature": "addExtension(String, MimeType)",
+    "className": "Patterns",
+    "packageName": "org.apache.tika.mime"
+  },
+  "method4": {
+    "methodName": "addGlob",
+    "signature": "addGlob(String, MimeType)",
+    "className": "Patterns",
+    "packageName": "org.apache.tika.mime"
+  },
+  "method5": {
+    "methodName": "matches",
+    "signature": "matches(String)",
+    "className": "Patterns",
+    "packageName": "org.apache.tika.mime"
+  },
+  "method6": {
+    "methodName": "compile",
+    "signature": "compile(String)",
+    "className": "Patterns",
+    "packageName": "org.apache.tika.mime"
+  },
+  "method7": {
+    "methodName": "Patterns",
+    "signature": "Patterns(MediaTypeRegistry)",
+    "className": "Patterns",
+    "packageName": "org.apache.tika.mime"
+  }
+}

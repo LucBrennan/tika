@@ -1,0 +1,114 @@
+package org.apache.tika.mime;
+
+import java.io.Serializable;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.SortedMap;
+import java.util.TreeMap;
+import org.apache.tika.mime.MediaTypeRegistry;
+import org.apache.tika.mime.MimeType;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.*;
+import org.junit.jupiter.api.*;
+import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+@ExtendWith(MockitoExtension.class)
+public class Patterns_matches_5_0_Test {
+
+    private Patterns patterns;
+
+    private MediaTypeRegistry registry;
+
+    @BeforeEach
+    public void setUp() {
+        registry = mock(MediaTypeRegistry.class);
+        when(registry.getDefaultRegistry()).thenReturn(registry);
+        when(registry.getTypes()).thenReturn(new TreeSet<>());
+        patterns = new Patterns(registry);
+    }
+
+    @Test
+    public void testMatchesExactMatch() {
+        MimeType mimeType = mock(MimeType.class);
+        when(mimeType.getName()).thenReturn("example");
+        when(registry.getTypes()).thenReturn(new TreeSet<>());
+        when(registry.getTypes()).thenReturn(new TreeSet<>(List.of(mimeType)));
+        when(mimeType.getName()).thenReturn("example");
+        assertEquals(mimeType, patterns.matches("example"));
+    }
+
+    @Test
+    public void testMatchesExtensionMatch() {
+        MimeType mimeType = mock(MimeType.class);
+        when(mimeType.getName()).thenReturn("example");
+        when(mimeType.getExtension()).thenReturn("example");
+        when(registry.getTypes()).thenReturn(new TreeSet<>());
+        when(registry.getTypes()).thenReturn(new TreeSet<>(List.of(mimeType)));
+        when(mimeType.getName()).thenReturn("example");
+        assertEquals(mimeType, patterns.matches("example.txt"));
+    }
+
+    @Test
+    public void testMatchesGlobMatch() {
+        MimeType mimeType = mock(MimeType.class);
+        when(mimeType.getName()).thenReturn("example");
+        when(mimeType.getExtension()).thenReturn("example");
+        when(registry.getTypes()).thenReturn(new TreeSet<>());
+        when(registry.getTypes()).thenReturn(new TreeSet<>(List.of(mimeType)));
+        when(mimeType.getName()).thenReturn("example");
+        assertEquals(mimeType, patterns.matches("example.txt"));
+    }
+
+    @Test
+    public void testMatchesNullName() {
+        assertThrows(IllegalArgumentException.class, () -> patterns.matches(null));
+    }
+
+    @Test
+    public void testMatchesNonExistingName() {
+        assertNull(patterns.matches("non-existing"));
+    }
+
+    @Test
+    public void testMatchesEmptyName() {
+        assertNull(patterns.matches(""));
+    }
+}
+
+--------------------------------------------
+Error in Patterns_matches_5_0_Test: line 12 : package org.mockito.junit.jupiter does not exist
+Error in Patterns_matches_5_0_Test: line 18 : cannot find symbol
+  symbol: class MockitoExtension
+Error in Patterns_matches_5_0_Test: line 29 : cannot find symbol
+  symbol:   class TreeSet
+  location: class org.apache.tika.mime.Patterns_matches_5_0_Test
+Error in Patterns_matches_5_0_Test: line 37 : cannot find symbol
+  symbol:   class TreeSet
+  location: class org.apache.tika.mime.Patterns_matches_5_0_Test
+Error in Patterns_matches_5_0_Test: line 38 : cannot find symbol
+  symbol:   class TreeSet
+  location: class org.apache.tika.mime.Patterns_matches_5_0_Test
+Error in Patterns_matches_5_0_Test: line 38 : cannot find symbol
+  symbol:   variable List
+  location: class org.apache.tika.mime.Patterns_matches_5_0_Test
+Error in Patterns_matches_5_0_Test: line 48 : cannot find symbol
+  symbol:   class TreeSet
+  location: class org.apache.tika.mime.Patterns_matches_5_0_Test
+Error in Patterns_matches_5_0_Test: line 49 : cannot find symbol
+  symbol:   class TreeSet
+  location: class org.apache.tika.mime.Patterns_matches_5_0_Test
+Error in Patterns_matches_5_0_Test: line 49 : cannot find symbol
+  symbol:   variable List
+  location: class org.apache.tika.mime.Patterns_matches_5_0_Test
+Error in Patterns_matches_5_0_Test: line 59 : cannot find symbol
+  symbol:   class TreeSet
+  location: class org.apache.tika.mime.Patterns_matches_5_0_Test
+Error in Patterns_matches_5_0_Test: line 60 : cannot find symbol
+  symbol:   class TreeSet
+  location: class org.apache.tika.mime.Patterns_matches_5_0_Test
+Error in Patterns_matches_5_0_Test: line 60 : cannot find symbol
+  symbol:   variable List
+  location: class org.apache.tika.mime.Patterns_matches_5_0_Test

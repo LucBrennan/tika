@@ -1,0 +1,11 @@
+{
+  "attempt0": {
+    "testClassName": "Patterns_matches_5_0_Test",
+    "fullName": "org.apache.tika.mime.Patterns_matches_5_0_Test",
+    "path": "C:\\dev\\tika\\tika-core\\chatunitest-tests\\org\\apache\\tika\\mime\\Patterns_matches_5_0_Test.java",
+    "className": "Patterns",
+    "packageName": "org.apache.tika.mime",
+    "methodName": "matches",
+    "methodSig": "matches(String)"
+  }
+}

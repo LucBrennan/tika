@@ -1,0 +1,139 @@
+package org.apache.tika.mime;
+
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.ValueSource;
+import org.apache.tika.mime.MimeType;
+import org.apache.tika.mime.MimeTypeException;
+import org.apache.tika.mime.Patterns;
+import org.apache.tika.mime.MediaTypeRegistry;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import org.mockito.*;
+import org.junit.jupiter.api.*;
+import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
+import java.io.Serializable;
+import java.util.Comparator;
+import java.util.SortedMap;
+import java.util.TreeMap;
+
+public class Patterns_add_0_0_Test {
+
+    private Patterns patterns;
+
+    private MediaTypeRegistry registry;
+
+    @BeforeEach
+    public void setUp() {
+        registry = new MediaTypeRegistry();
+        patterns = new Patterns(registry);
+    }
+
+    @Test
+    public void testAddValidPattern() throws MimeTypeException {
+        MimeType type = new MimeType("text/plain");
+        patterns.add("text/plain", type);
+        assertEquals(type, patterns.names.get("text/plain"));
+        assertEquals(type, patterns.extensions.get("txt"));
+    }
+
+    @Test
+    public void testAddValidJavaRegexPattern() throws MimeTypeException {
+        MimeType type = new MimeType("application/pdf");
+        patterns.add("application/pdf", true, type);
+        assertEquals(type, patterns.names.get("application/pdf"));
+        assertEquals(type, patterns.extensions.get("pdf"));
+    }
+
+    @Test
+    public void testAddNamePattern() throws MimeTypeException {
+        MimeType type = new MimeType("image/png");
+        patterns.add("image/png", type);
+        assertEquals(type, patterns.names.get("image/png"));
+        assertEquals(type, patterns.extensions.get("png"));
+    }
+
+    @Test
+    public void testAddExtensionPattern() throws MimeTypeException {
+        MimeType type = new MimeType("application/octet-stream");
+        patterns.add("application/octet-stream", type);
+        assertEquals(type, patterns.names.get("application/octet-stream"));
+        assertEquals(type, patterns.extensions.get("bin"));
+    }
+
+    @Test
+    public void testAddGlobPattern() throws MimeTypeException {
+        MimeType type = new MimeType("text/html");
+        patterns.add("text/html", type);
+        assertEquals(type, patterns.names.get("text/html"));
+        assertEquals(type, patterns.extensions.get("html"));
+    }
+
+    @Test
+    public void testAddPatternWithInvalidCharacter() throws MimeTypeException {
+        try {
+            patterns.add("invalid*pattern", new MimeType("application/xml"));
+            fail("Expected MimeTypeException for invalid pattern");
+        } catch (MimeTypeException e) {
+            assertEquals("Invalid pattern: invalid*pattern", e.getMessage());
+        }
+    }
+
+    @Test
+    public void testAddPatternWithMissingType() throws MimeTypeException {
+        try {
+            patterns.add("image/jpeg", null);
+            fail("Expected IllegalArgumentException for missing type");
+        } catch (IllegalArgumentException e) {
+            assertEquals("Pattern and/or mime type is missing", e.getMessage());
+        }
+    }
+
+    @Test
+    public void testAddPatternWithNullPattern() throws MimeTypeException {
+        try {
+            patterns.add(null, new MimeType("application/json"));
+            fail("Expected IllegalArgumentException for null pattern");
+        } catch (IllegalArgumentException e) {
+            assertEquals("Pattern and/or mime type is missing", e.getMessage());
+        }
+    }
+
+    @Test
+    public void testAddPatternWithNullType() throws MimeTypeException {
+        try {
+            patterns.add("application/xml", null);
+            fail("Expected IllegalArgumentException for null type");
+        } catch (IllegalArgumentException e) {
+            assertEquals("Pattern and/or mime type is missing", e.getMessage());
+        }
+    }
+}
+
+--------------------------------------------
+Error in Patterns_add_0_0_Test: line 3 : package org.junit.jupiter.params does not exist
+Error in Patterns_add_0_0_Test: line 4 : package org.junit.jupiter.params.provider does not exist
+Error in Patterns_add_0_0_Test: line 5 : package org.junit.jupiter.params.provider does not exist
+Error in Patterns_add_0_0_Test: line 18 : package org.mockito.junit.jupiter does not exist
+Error in Patterns_add_0_0_Test: line 38 : incompatible types: java.lang.String cannot be converted to org.apache.tika.mime.MediaType
+Error in Patterns_add_0_0_Test: line 40 : names has private access in org.apache.tika.mime.Patterns
+Error in Patterns_add_0_0_Test: line 41 : extensions has private access in org.apache.tika.mime.Patterns
+Error in Patterns_add_0_0_Test: line 46 : incompatible types: java.lang.String cannot be converted to org.apache.tika.mime.MediaType
+Error in Patterns_add_0_0_Test: line 48 : names has private access in org.apache.tika.mime.Patterns
+Error in Patterns_add_0_0_Test: line 49 : extensions has private access in org.apache.tika.mime.Patterns
+Error in Patterns_add_0_0_Test: line 54 : incompatible types: java.lang.String cannot be converted to org.apache.tika.mime.MediaType
+Error in Patterns_add_0_0_Test: line 56 : names has private access in org.apache.tika.mime.Patterns
+Error in Patterns_add_0_0_Test: line 57 : extensions has private access in org.apache.tika.mime.Patterns
+Error in Patterns_add_0_0_Test: line 62 : incompatible types: java.lang.String cannot be converted to org.apache.tika.mime.MediaType
+Error in Patterns_add_0_0_Test: line 64 : names has private access in org.apache.tika.mime.Patterns
+Error in Patterns_add_0_0_Test: line 65 : extensions has private access in org.apache.tika.mime.Patterns
+Error in Patterns_add_0_0_Test: line 70 : incompatible types: java.lang.String cannot be converted to org.apache.tika.mime.MediaType
+Error in Patterns_add_0_0_Test: line 72 : names has private access in org.apache.tika.mime.Patterns
+Error in Patterns_add_0_0_Test: line 73 : extensions has private access in org.apache.tika.mime.Patterns
+Error in Patterns_add_0_0_Test: line 79 : incompatible types: java.lang.String cannot be converted to org.apache.tika.mime.MediaType
+Error in Patterns_add_0_0_Test: line 99 : incompatible types: java.lang.String cannot be converted to org.apache.tika.mime.MediaType
+Error in Patterns_add_0_0_Test: line -1 : Some messages have been simplified; recompile with -Xdiags:verbose to get full output

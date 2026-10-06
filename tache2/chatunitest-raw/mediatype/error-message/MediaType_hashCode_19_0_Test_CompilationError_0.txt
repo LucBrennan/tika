@@ -1,0 +1,90 @@
+package org.apache.tika.mime;
+
+import static org.junit.jupiter.api.TestInstance.Lifecycle.PER_CLASS;
+import static org.junit.jupiter.params.ParameterizedTest;
+import static org.junit.jupiter.params.provider.CsvSource;
+import static org.junit.jupiter.params.provider.ValueSource;
+import java.io.Serializable;
+import java.nio.charset.Charset;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
+import java.util.SortedMap;
+import java.util.TreeMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import org.apache.tika.mime.MediaType;
+import org.mockito.*;
+import org.junit.jupiter.api.*;
+import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+@TestInstance(PER_CLASS)
+public class MediaType_hashCode_19_0_Test {
+
+    private static MediaType OCTET_STREAM;
+
+    private static MediaType EMPTY;
+
+    private static MediaType TEXT_PLAIN;
+
+    private static MediaType TEXT_HTML;
+
+    private static MediaType APPLICATION_XML;
+
+    private static MediaType APPLICATION_ZIP;
+
+    @BeforeAll
+    public static void setUp() {
+        OCTET_STREAM = MediaType.parse("application/octet-stream");
+        EMPTY = MediaType.parse("application/x-empty");
+        TEXT_PLAIN = MediaType.parse("text/plain");
+        TEXT_HTML = MediaType.parse("text/html");
+        APPLICATION_XML = MediaType.parse("application/xml");
+        APPLICATION_ZIP = MediaType.parse("application/zip");
+    }
+
+    @ParameterizedTest
+    @CsvSource({ "application/octet-stream, application/octet-stream", "text/plain, text/plain", "text/html, text/html", "application/xml, application/xml", "application/zip, application/zip" })
+    public void testHashCode(MediaType type, String expected) {
+        assertEquals(expected, type.hashCode());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = { "application/octet-stream", "text/plain", "text/html", "application/xml", "application/zip" })
+    public void testHashCodeWithParameters(MediaType type) {
+        String expected = type.hashCode() + "-parameters";
+        assertEquals(expected, type.hashCode());
+    }
+}
+
+--------------------------------------------
+Error in MediaType_hashCode_19_0_Test: line 4 : cannot find symbol
+  symbol:   class params
+  location: package org.junit.jupiter
+Error in MediaType_hashCode_19_0_Test: line 4 : static import only from classes and interfaces
+Error in MediaType_hashCode_19_0_Test: line 5 : cannot find symbol
+  symbol:   class provider
+  location: package org.junit.jupiter.params
+Error in MediaType_hashCode_19_0_Test: line 5 : static import only from classes and interfaces
+Error in MediaType_hashCode_19_0_Test: line 6 : cannot find symbol
+  symbol:   class provider
+  location: package org.junit.jupiter.params
+Error in MediaType_hashCode_19_0_Test: line 6 : static import only from classes and interfaces
+Error in MediaType_hashCode_19_0_Test: line 52 : cannot find symbol
+  symbol:   class ParameterizedTest
+  location: class org.apache.tika.mime.MediaType_hashCode_19_0_Test
+Error in MediaType_hashCode_19_0_Test: line 53 : cannot find symbol
+  symbol:   class CsvSource
+  location: class org.apache.tika.mime.MediaType_hashCode_19_0_Test
+Error in MediaType_hashCode_19_0_Test: line 58 : cannot find symbol
+  symbol:   class ParameterizedTest
+  location: class org.apache.tika.mime.MediaType_hashCode_19_0_Test
+Error in MediaType_hashCode_19_0_Test: line 59 : cannot find symbol
+  symbol:   class ValueSource
+  location: class org.apache.tika.mime.MediaType_hashCode_19_0_Test

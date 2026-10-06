@@ -1,0 +1,115 @@
+package org.apache.tika.mime;
+
+import org.apache.tika.mime.MediaType;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
+import java.io.Serializable;
+import java.nio.charset.Charset;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
+import java.util.SortedMap;
+import java.util.TreeMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import org.mockito.*;
+import org.junit.jupiter.api.*;
+import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+@ExtendWith(MockitoExtension.class)
+public class MediaType_toString_17_0_Test {
+
+    @Mock
+    private Charset charset;
+
+    @InjectMocks
+    private MediaType mediaType;
+
+    @BeforeEach
+    public void setUp() {
+        // Initialize the mediaType with some values
+        Map<String, String> parameters = new HashMap<>();
+        parameters.put("param1", "value1");
+        mediaType = new MediaType("text/plain", "plain", parameters);
+    }
+
+    @Test
+    public void testToString() {
+        // Test the toString method with a simple media type
+        String expected = "text/plain; param1=value1";
+        assertEquals(expected, mediaType.toString());
+        // Test the toString method with a media type without parameters
+        mediaType = new MediaType("text/plain", "plain");
+        expected = "text/plain";
+        assertEquals(expected, mediaType.toString());
+        // Test the toString method with a media type without parameters and a charset
+        mediaType = new MediaType("text/plain", "plain", charset);
+        expected = "text/plain; charset=utf-8";
+        assertEquals(expected, mediaType.toString());
+        // Test the toString method with a media type without parameters and an empty charset
+        mediaType = new MediaType("text/plain", "plain", (Charset) null);
+        expected = "text/plain";
+        assertEquals(expected, mediaType.toString());
+        // Test the toString method with a media type without parameters and a null charset
+        mediaType = new MediaType("text/plain", "plain", null);
+        expected = "text/plain";
+        assertEquals(expected, mediaType.toString());
+        // Test the toString method with a media type without parameters and an empty map of parameters
+        mediaType = new MediaType("text/plain", "plain", Collections.emptyMap());
+        expected = "text/plain";
+        assertEquals(expected, mediaType.toString());
+    }
+
+    @Test
+    public void testToStringWithNullString() {
+        mediaType = new MediaType(null, "plain", Collections.emptyMap());
+        assertEquals("", mediaType.toString());
+    }
+
+    @Test
+    public void testToStringWithEmptyString() {
+        mediaType = new MediaType("", "plain", Collections.emptyMap());
+        assertEquals("", mediaType.toString());
+    }
+
+    @Test
+    public void testToStringWithNullType() {
+        mediaType = new MediaType(null, "plain", Collections.emptyMap());
+        assertEquals("", mediaType.toString());
+    }
+
+    @Test
+    public void testToStringWithNullSubtype() {
+        mediaType = new MediaType("text", null, Collections.emptyMap());
+        assertEquals("", mediaType.toString());
+    }
+
+    @Test
+    public void testToStringWithNullParameters() {
+        mediaType = new MediaType("text/plain", "plain", null);
+        assertEquals("text/plain", mediaType.toString());
+    }
+
+    @Test
+    public void testToStringWithNullCharset() {
+        mediaType = new MediaType("text/plain", "plain", null);
+        assertEquals("text/plain", mediaType.toString());
+    }
+}
+
+--------------------------------------------
+Error in MediaType_toString_17_0_Test: line 50 : no suitable constructor found for MediaType(java.lang.String,java.lang.String,java.nio.charset.Charset)
+    constructor org.apache.tika.mime.MediaType.MediaType(java.lang.String,java.lang.String,java.util.Map<java.lang.String,java.lang.String>) is not applicable
+      (argument mismatch; java.nio.charset.Charset cannot be converted to java.util.Map<java.lang.String,java.lang.String>)
+    constructor org.apache.tika.mime.MediaType.MediaType(org.apache.tika.mime.MediaType,java.lang.String,java.lang.String) is not applicable
+      (argument mismatch; java.lang.String cannot be converted to org.apache.tika.mime.MediaType)
+Error in MediaType_toString_17_0_Test: line 54 : no suitable constructor found for MediaType(java.lang.String,java.lang.String,java.nio.charset.Charset)
+    constructor org.apache.tika.mime.MediaType.MediaType(java.lang.String,java.lang.String,java.util.Map<java.lang.String,java.lang.String>) is not applicable
+      (argument mismatch; java.nio.charset.Charset cannot be converted to java.util.Map<java.lang.String,java.lang.String>)
+    constructor org.apache.tika.mime.MediaType.MediaType(org.apache.tika.mime.MediaType,java.lang.String,java.lang.String) is not applicable
+      (argument mismatch; java.lang.String cannot be converted to org.apache.tika.mime.MediaType)
+Error in MediaType_toString_17_0_Test: line -1 : Some messages have been simplified; recompile with -Xdiags:verbose to get full output

@@ -1,0 +1,11 @@
+{
+  "attempt0": {
+    "testClassName": "MediaType_equals_18_0_Test",
+    "fullName": "org.apache.tika.mime.MediaType_equals_18_0_Test",
+    "path": "C:\\dev\\tika\\tika-core\\chatunitest-tests\\org\\apache\\tika\\mime\\MediaType_equals_18_0_Test.java",
+    "className": "MediaType",
+    "packageName": "org.apache.tika.mime",
+    "methodName": "equals",
+    "methodSig": "equals(Object)"
+  }
+}

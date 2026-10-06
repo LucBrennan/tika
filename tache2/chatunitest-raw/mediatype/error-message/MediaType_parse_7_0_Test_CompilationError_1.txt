@@ -1,0 +1,166 @@
+package org.apache.tika.mime;
+
+import static java.lang.reflect.Method;
+import static org.junit.jupiter.params.ParameterizedTest;
+import static org.junit.jupiter.params.provider.Arguments.*;
+import static org.junit.jupiter.params.provider.MethodSource.*;
+import org.apache.tika.mime.MediaType;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.*;
+import org.junit.jupiter.api.*;
+import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.*;
+import java.io.Serializable;
+import java.nio.charset.Charset;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
+import java.util.SortedMap;
+import java.util.TreeMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+@ExtendWith(MockitoExtension.class)
+public class MediaType_parse_7_0_Test {
+
+    private static final Pattern SPECIAL = Pattern.compile("[\\(\\)<>@,;:\\\\\"/\\[\\]\\?=]");
+
+    private static final Pattern SPECIAL_OR_WHITESPACE = Pattern.compile("[\\(\\)<>@,;:\\\\\"/\\[\\]\\?=\\s]");
+
+    private static final String VALID_CHARS = "([^\\c\\(\\)<>@,;:\\\\\"/\\[\\]\\?=\\s]+)";
+
+    private static final Pattern TYPE_PATTERN = Pattern.compile("(?s)\\s*" + VALID_CHARS + "\\s*/\\s*" + VALID_CHARS + "\\s*($|;.*)");
+
+    private static final Pattern CHARSET_FIRST_PATTERN = Pattern.compile("(?is)\\s*(charset\\s*=\\s*[^\\c;\\s]+)\\s*;\\s*" + VALID_CHARS + "\\s*/\\s*" + VALID_CHARS + "\\s*");
+
+    private static final Map<String, MediaType> SIMPLE_TYPES = new HashMap<>();
+
+    public static final MediaType OCTET_STREAM = parse("application/octet-stream");
+
+    public static final MediaType EMPTY = parse("application/x-empty");
+
+    public static final MediaType TEXT_PLAIN = parse("text/plain");
+
+    public static final MediaType TEXT_HTML = parse("text/html");
+
+    public static final MediaType APPLICATION_XML = parse("application/xml");
+
+    public static final MediaType APPLICATION_ZIP = parse("application/zip");
+
+    private MediaType testMediaType;
+
+    @BeforeEach
+    public void setUp() {
+        testMediaType = null;
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideTestCases")
+    public void testParse(String input, MediaType expected) {
+        testMediaType = MediaType.parse(input);
+        assertEquals(expected, testMediaType);
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideInvalidTestCases")
+    public void testInvalidParse(String input) {
+        testMediaType = MediaType.parse(input);
+        assertNull(testMediaType);
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideNullInputTestCases")
+    public void testNullInput() {
+        testMediaType = MediaType.parse(null);
+        assertNull(testMediaType);
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideEmptyStringTestCases")
+    public void testEmptyString() {
+        testMediaType = MediaType.parse("");
+        assertNull(testMediaType);
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideInvalidTypePatternTestCases")
+    public void testInvalidTypePattern(String input) {
+        testMediaType = MediaType.parse(input);
+        assertNull(testMediaType);
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideInvalidCharsetFirstPatternTestCases")
+    public void testInvalidCharsetFirstPattern(String input) {
+        testMediaType = MediaType.parse(input);
+        assertNull(testMediaType);
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideInvalidParametersTestCases")
+    public void testInvalidParameters(String input) {
+        testMediaType = MediaType.parse(input);
+        assertNull(testMediaType);
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideInvalidParametersSyntaxTestCases")
+    public void testInvalidParametersSyntax(String input) {
+        testMediaType = MediaType.parse(input);
+        assertNull(testMediaType);
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideInvalidParametersValueSyntaxTestCases")
+    public void testInvalidParametersValueSyntax(String input) {
+        testMediaType = MediaType.parse(input);
+        assertNull(testMediaType);
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideInvalidParametersKeySyntaxTestCases")
+    public void testInvalidParametersKeySyntax(String input) {
+        testMediaType = MediaType.parse(input);
+        assertNull(testMediaType);
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideInvalidParametersKeyAndValueSyntaxTestCases")
+    public void testInvalidParametersKeyAndValueSyntax(String input) {
+        testMediaType = MediaType.parse(input);
+        assertNull(testMediaType);
+    }
+}
+
+--------------------------------------------
+Error in MediaType_parse_7_0_Test: line 3 : cannot find symbol
+  symbol:   class reflect
+  location: package java.lang
+Error in MediaType_parse_7_0_Test: line 3 : static import only from classes and interfaces
+Error in MediaType_parse_7_0_Test: line 4 : package org.junit.jupiter does not exist
+Error in MediaType_parse_7_0_Test: line 4 : static import only from classes and interfaces
+Error in MediaType_parse_7_0_Test: line 45 : cannot find symbol
+  symbol:   method parse(java.lang.String)
+  location: class org.apache.tika.mime.MediaType_parse_7_0_Test
+Error in MediaType_parse_7_0_Test: line 47 : cannot find symbol
+  symbol:   method parse(java.lang.String)
+  location: class org.apache.tika.mime.MediaType_parse_7_0_Test
+Error in MediaType_parse_7_0_Test: line 49 : cannot find symbol
+  symbol:   method parse(java.lang.String)
+  location: class org.apache.tika.mime.MediaType_parse_7_0_Test
+Error in MediaType_parse_7_0_Test: line 51 : cannot find symbol
+  symbol:   method parse(java.lang.String)
+  location: class org.apache.tika.mime.MediaType_parse_7_0_Test
+Error in MediaType_parse_7_0_Test: line 53 : cannot find symbol
+  symbol:   method parse(java.lang.String)
+  location: class org.apache.tika.mime.MediaType_parse_7_0_Test
+Error in MediaType_parse_7_0_Test: line 55 : cannot find symbol
+  symbol:   method parse(java.lang.String)
+  location: class org.apache.tika.mime.MediaType_parse_7_0_Test

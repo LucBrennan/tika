@@ -1,0 +1,11 @@
+{
+  "attempt0": {
+    "testClassName": "MediaType_toString_17_0_Test",
+    "fullName": "org.apache.tika.mime.MediaType_toString_17_0_Test",
+    "path": "C:\\dev\\tika\\tika-core\\chatunitest-tests\\org\\apache\\tika\\mime\\MediaType_toString_17_0_Test.java",
+    "className": "MediaType",
+    "packageName": "org.apache.tika.mime",
+    "methodName": "toString",
+    "methodSig": "toString()"
+  }
+}
