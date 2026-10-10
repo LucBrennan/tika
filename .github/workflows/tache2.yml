@@ -1,0 +1,26 @@
+# IFT3913, Tache 2: build tika-core (and the modules it depends on) and run its tests,
+# including the ChatUniTest-generated and hand-written tests for MediaType and Patterns.
+name: tache2
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - uses: actions/checkout@v6
+      - name: Set up JDK 25 (Temurin)
+        uses: actions/setup-java@v5
+        with:
+          distribution: 'temurin'
+          java-version: '25'
+          cache: 'maven'
+      - name: Build and test tika-core
+        run: ./mvnw -B install -pl :tika-core -am

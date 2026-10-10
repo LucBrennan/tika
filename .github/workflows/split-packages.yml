@@ -18,10 +18,8 @@
 name: no split packages
 
 on:
-  pull_request:
-    branches: [ main ]
-  push:
-    branches: [ main ]
+  # Disabled in this fork (IFT3913, Tache 2): manual runs only, see tache2.yml
+  workflow_dispatch:
 
 jobs:
   check-split-packages:

@@ -34,6 +34,16 @@
   <name>Apache Tika core</name>
   <url>https://tika.apache.org/</url>
 
+  <properties>
+    <!-- pitest test sets (IFT3913, Tache 2). Override one on the command line, e.g.
+         -Dpit.targetTests='${pit.baselineTests}' -->
+    <pit.baselineTests>org.apache.tika.mime.MediaTypeTest,org.apache.tika.utils.CharsetUtilsTest,org.apache.tika.mime.PatternsTest,org.apache.tika.io.LookaheadInputStreamTest</pit.baselineTests>
+    <pit.generatedTests>org.apache.tika.mime.MediaType_*,org.apache.tika.mime.Patterns_*</pit.generatedTests>
+    <pit.handWrittenTests>org.apache.tika.mime.MediaTypeHandWrittenTest,org.apache.tika.mime.PatternsHandWrittenTest</pit.handWrittenTests>
+    <pit.targetTests>${pit.baselineTests},${pit.generatedTests},${pit.handWrittenTests}</pit.targetTests>
+    <pit.mutationUnitSize>1</pit.mutationUnitSize>
+  </properties>
+
   <dependencies>
     <!-- See https://issues.apache.org/jira/browse/TIKA-2566 for more info -->
     <dependency>
@@ -154,37 +164,36 @@
         </configuration>
       </plugin>
       <plugin>
-  	<groupId>org.pitest</groupId>
-  	<artifactId>pitest-maven</artifactId>
-  	<version>1.25.9</version>
-  	<dependencies>
-   	 <dependency>
-    	  <groupId>org.pitest</groupId>
-     	 <artifactId>pitest-junit5-plugin</artifactId>
-     	 <version>1.2.3</version>
-    	</dependency>
- 	 </dependencies>
- 	 <configuration>
-    	<targetClasses>
-     	 <param>org.apache.tika.mime.MediaType</param>
-    	  <param>org.apache.tika.utils.CharsetUtils</param>
-     	 <param>org.apache.tika.mime.Patterns</param>
-    	  <param>org.apache.tika.io.LookaheadInputStream</param>
-  	  </targetClasses>
-  	        <targetTests>
-        <param>org.apache.tika.mime.MediaTypeTest</param>
-        <param>org.apache.tika.utils.CharsetUtilsTest</param>
-        <param>org.apache.tika.mime.PatternsTest</param>
-        <param>org.apache.tika.io.LookaheadInputStreamTest</param>
-      </targetTests>
-      <outputFormats>
-        <param>HTML</param>
-        <param>CSV</param>
-      </outputFormats>
-  	  <threads>4</threads>
-  	  <timestampedReports>false</timestampedReports>
-	  </configuration>
-	</plugin>
+        <groupId>org.pitest</groupId>
+        <artifactId>pitest-maven</artifactId>
+        <version>1.25.9</version>
+        <dependencies>
+          <dependency>
+            <groupId>org.pitest</groupId>
+            <artifactId>pitest-junit5-plugin</artifactId>
+            <version>1.2.3</version>
+          </dependency>
+        </dependencies>
+        <configuration>
+          <targetClasses>
+            <param>org.apache.tika.mime.MediaType</param>
+            <param>org.apache.tika.utils.CharsetUtils</param>
+            <param>org.apache.tika.mime.Patterns</param>
+            <param>org.apache.tika.io.LookaheadInputStream</param>
+          </targetClasses>
+          <!-- comma-separated list, see pit.targetTests above -->
+          <targetTests>${pit.targetTests}</targetTests>
+          <!-- one JVM per mutant, so that MediaType's static SIMPLE_TYPES cache
+               cannot carry a wrong entry from one mutant to the next -->
+          <mutationUnitSize>${pit.mutationUnitSize}</mutationUnitSize>
+          <outputFormats>
+            <param>HTML</param>
+            <param>CSV</param>
+          </outputFormats>
+          <threads>4</threads>
+          <timestampedReports>false</timestampedReports>
+        </configuration>
+      </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-checkstyle-plugin</artifactId>

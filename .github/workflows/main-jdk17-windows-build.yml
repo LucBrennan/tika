@@ -18,14 +18,8 @@
 name: main jdk17 windows build
 
 on:
-  pull_request:
-    branches: [ main ]
-    paths-ignore:
-      - 'docs/**'
-  push:
-    branches: [ main ]
-    paths-ignore:
-      - 'docs/**'
+  # Disabled in this fork (IFT3913, Tache 2): manual runs only, see tache2.yml
+  workflow_dispatch:
 
 jobs:
   build:

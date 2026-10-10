@@ -18,11 +18,8 @@
 name: Docker snapshot - tika-server and tika-grpc
 
 on:
-  push:
-    branches: [ main ]
-    paths-ignore:
-      - 'docs/**'
-      - '*.md'
+  # Disabled in this fork (IFT3913, Tache 2): manual runs only, see tache2.yml
+  workflow_dispatch:
 
 jobs:
   # Gate: publish snapshot images ONLY for -SNAPSHOT versions. The
