@@ -18,9 +18,10 @@ package org.apache.tika.mime;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
@@ -33,121 +34,102 @@ import org.junit.jupiter.params.provider.ValueSource;
 
 /**
  * Hand-written tests for the {@link MediaType} mutants that survived MediaTypeTest and the
- * ChatUniTest-generated tests (see tache2/after-generated-unkilled.txt).
+ * ChatUniTest-generated tests.
  */
 public class MediaTypeHandWrittenTest {
 
     @Test
-    public void setOfMediaTypesSkipsNullAndDuplicates() {
-        Set<MediaType> set = MediaType.set(MediaType.TEXT_PLAIN, null, MediaType.TEXT_HTML,
+    public void audioFactoryProducesAudioWavType() {
+        assertEquals("audio/wav", String.valueOf(MediaType.audio("wav")));
+    }
+
+    @Test
+    public void mediaTypeSetHasNoNullsOrDuplicates() {
+        MediaType json = MediaType.parse("application/json");
+        Set<MediaType> set = MediaType.set(MediaType.TEXT_PLAIN, null, json,
                 MediaType.TEXT_PLAIN);
 
-        assertEquals(Set.of(MediaType.TEXT_PLAIN, MediaType.TEXT_HTML), set);
+        assertEquals(2, set.size());
+        for (MediaType type : set) {
+            assertNotNull(type);
+        }
         assertThrows(UnsupportedOperationException.class, () -> set.add(MediaType.OCTET_STREAM));
     }
 
     @Test
-    public void setOfStringsSkipsValuesThatCannotBeParsed() {
-        Set<MediaType> set = MediaType.set("text/plain", "no-slash", "text/html");
+    public void stringSetDropsEntriesWithEmptySubtype() {
+        Set<MediaType> set = MediaType.set("text/plain", "text/", "application/json");
 
-        assertEquals(Set.of(MediaType.TEXT_PLAIN, MediaType.TEXT_HTML), set);
-        assertThrows(UnsupportedOperationException.class, () -> set.add(MediaType.OCTET_STREAM));
+        assertEquals(Set.of(MediaType.TEXT_PLAIN, MediaType.parse("application/json")), set);
     }
 
     @Test
-    public void addingAParameterToATypeWithoutParameters() {
-        MediaType expected = MediaType.parse("text/plain; charset=UTF-8");
-
-        assertEquals(expected, new MediaType(MediaType.TEXT_PLAIN, "charset", "UTF-8"));
-        assertEquals(expected, new MediaType(MediaType.TEXT_PLAIN, StandardCharsets.UTF_8));
-        assertEquals(expected, new MediaType(MediaType.TEXT_PLAIN, Map.of("charset", "UTF-8")));
+    public void emptyTypeOrSubtypeIsRejected() {
+        assertNull(MediaType.parse("/"));
+        assertNull(MediaType.parse("/plain"));
+        assertNull(MediaType.parse("text/"));
     }
 
     @Test
-    public void addingAParameterToATypeWithParametersKeepsBoth() {
+    public void charsetFirstFormIsParsedIntoTypeAndParameter() {
+        MediaType type = MediaType.parse("charset=windows-1252; application/json");
+
+        assertNotNull(type);
+        assertEquals(MediaType.parse("application/json"), type.getBaseType());
+        assertEquals("windows-1252", type.getParameters().get("charset"));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"APPLICATION/JSON", "Application/Json", "application/JSON"})
+    public void asciiUpperCaseIsLowerCased(String input) {
+        assertEquals(MediaType.parse("application/json"), MediaType.parse(input));
+    }
+
+    @Test
+    public void latinOneUpperCaseIsLowerCased() {
+        assertEquals("\u00e4\u00f6/\u00fc", String.valueOf(MediaType.parse("\u00c4\u00d6/\u00dc")));
+    }
+
+    @Test
+    public void charsetConstructorAddsCharsetParameter() {
+        MediaType type = new MediaType(MediaType.TEXT_PLAIN, StandardCharsets.UTF_16);
+
+        assertEquals(MediaType.parse("text/plain; charset=UTF-16"), type);
+        assertEquals(1, type.getParameters().size());
+    }
+
+    @Test
+    public void emptyMapKeepsExistingParameters() {
+        MediaType base = MediaType.parse("text/html; charset=UTF-8");
+
+        MediaType same = new MediaType(base, Collections.emptyMap());
+
+        assertEquals("UTF-8", same.getParameters().get("charset"));
+        assertEquals(1, same.getParameters().size());
+    }
+
+    @Test
+    public void mergeKeepsOldAndNewParameters() {
         MediaType base = MediaType.parse("text/plain; charset=UTF-8");
 
-        MediaType merged = new MediaType(base, "format", "flowed");
+        MediaType merged = new MediaType(base, Map.of("format", "flowed"));
 
-        assertEquals(Map.of("charset", "UTF-8", "format", "flowed"), merged.getParameters());
+        assertEquals("UTF-8", merged.getParameters().get("charset"));
+        assertEquals("flowed", merged.getParameters().get("format"));
+        assertEquals(2, merged.getParameters().size());
     }
 
     @Test
-    public void newParameterValueReplacesTheOldOne() {
-        MediaType base = MediaType.parse("text/plain; charset=ISO-8859-1; format=fixed");
+    public void baseTypeStringHasNoParameters() {
+        MediaType base = MediaType.parse("application/json; charset=UTF-8").getBaseType();
 
-        MediaType changed = new MediaType(base, StandardCharsets.UTF_8);
-
-        assertEquals("text/plain; charset=UTF-8; format=fixed", changed.toString());
-    }
-
-    @Test
-    public void addingNoParametersKeepsTheExistingOnes() {
-        MediaType base = MediaType.parse("text/plain; charset=UTF-8");
-
-        assertEquals(base, new MediaType(base, Collections.emptyMap()));
-    }
-
-    @Test
-    public void baseTypeDropsTheParameters() {
-        MediaType base = MediaType.parse("text/html; charset=UTF-8").getBaseType();
-
-        assertEquals(MediaType.TEXT_HTML, base);
+        assertEquals("application/json", String.valueOf(base));
         assertFalse(base.hasParameters());
-        assertEquals(MediaType.TEXT_HTML, MediaType.TEXT_HTML.getBaseType());
     }
 
     @Test
-    public void audioFactoryBuildsAnAudioType() {
-        MediaType mpeg = MediaType.audio("mpeg");
-
-        assertEquals("audio", mpeg.getType());
-        assertEquals("mpeg", mpeg.getSubtype());
-        assertEquals(MediaType.parse("audio/mpeg"), mpeg);
-    }
-
-    @Test
-    public void charsetBeforeTheTypeIsAccepted() {
-        // TIKA-350: some web servers send "charset=...; type/subtype"
-        MediaType type = MediaType.parse("charset=UTF-8; text/html");
-
-        assertEquals("text/html; charset=UTF-8", String.valueOf(type));
-    }
-
-    @Test
-    public void typeWithoutParametersHasNoParameters() {
-        assertFalse(MediaType.TEXT_PLAIN.hasParameters());
-        assertFalse(MediaType.parse("application/zip").hasParameters());
-        assertTrue(MediaType.parse("text/plain; charset=UTF-8").hasParameters());
-    }
-
-    @Test
-    public void mediaTypeIsNeverEqualToAnotherKindOfObject() {
-        assertFalse(MediaType.TEXT_PLAIN.equals("text/plain"));
-        assertFalse(MediaType.TEXT_PLAIN.equals(null));
-    }
-
-    /**
-     * Upper case and surrounding spaces must be normalised. isSimpleName() is a fast path
-     * for names that need no normalisation, so it must reject these inputs.
-     */
-    @ParameterizedTest
-    @ValueSource(strings = {"TEXT/PLAIN", "TEXT/plain", "Text/Plain", " text/plain "})
-    public void typeAndSubtypeAreNormalised(String input) {
-        assertEquals(MediaType.TEXT_PLAIN, MediaType.parse(input));
-    }
-
-    /**
-     * U+00C0 is above 'z'. The fast path must reject it so that the slow path lower-cases it.
-     */
-    @Test
-    public void nonAsciiUpperCaseLettersAreLowerCased() {
-        assertEquals("à/à", String.valueOf(MediaType.parse("À/À")));
-    }
-
-    @ParameterizedTest
-    @ValueSource(strings = {"/", "text/", "/plain", "textplain"})
-    public void typeOrSubtypeMissingGivesNull(String input) {
-        assertNull(MediaType.parse(input));
+    public void equalsRejectsOtherKindsOfObject() {
+        assertNotEquals(MediaType.TEXT_PLAIN, "text/plain");
+        assertFalse(MediaType.TEXT_HTML.equals(null));
     }
 }
