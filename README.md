@@ -1,64 +1,77 @@
-# IFT3913 — Tâche 2 : tests générés par un LLM et analyse de mutation de `EndianUtils` (Apache Tika)
+# IFT3913 — Tâche 2 : `MediaType` et `Patterns` (Apache Tika)
 
-Ce dépôt est une copie (fork) d'[Apache Tika](https://github.com/apache/tika), dont le README d'origine est conservé dans [`README-apache-tika.md`](README-apache-tika.md). Ce README documente la tâche 2 en suivant, dans l'ordre, les étapes de l'énoncé.
+**Équipe :** Toky Erick Rabenantoandro , Luc Brennan
 
-## Sommaire
+[![tache2](https://github.com/LucBrennan/tika/actions/workflows/tache2.yml/badge.svg)](https://github.com/LucBrennan/tika/actions/workflows/tache2.yml)
 
 | Étape de l'énoncé | Section |
 |---|---|
-| Choisir une classe qui a déjà des tests, mais pas une couverture de 100 % | [1. Classe choisie](#1-classe-choisie) |
-| Installer ChatUniTest avec un LLM ouvert exécuté localement | [2. ChatUniTest dans le pipeline Maven](#2-chatunitest-dans-le-pipeline-maven) |
-| Générer des tests et documenter le résultat (où, compilation, corrections) | [3. Tests générés](#3-tests-générés) |
-| Comparer les oracles de l'IA à ceux écrits à la main | [4. Oracles](#4-oracles--tests-générés-et-tests-écrits-à-la-main) |
-| Ajouter PIT, calculer le score de mutation avec les tests originaux puis avec les tests générés, expliquer les mutants détectés | [5. Analyse de mutation avec PIT](#5-analyse-de-mutation-avec-pit) |
-| Ajouter et documenter des tests pour les mutants non détectés | [6. Tests écrits à la main](#6-tests-écrits-à-la-main) |
-| Exécuter les nouveaux tests dans une GitHub Action | [7. GitHub Action](#7-github-action) |
-| Déclarer l'utilisation de l'IA | [8. Déclaration d'utilisation de l'IA](#8-déclaration-dutilisation-de-lia) |
-| Bilan | [9. Conclusion](#9-conclusion--endianutils-avant-et-après) |
+| Classes choisies et justification | [1](#1-classes-choisies) |
+| ChatUniTest et modèle local | [2](#2-chatunitest-dans-le-pipeline-maven) |
+| Tests générés : où, compilation, corrections, critique | [3](#3-tests-générés) |
+| Oracles de l'IA vs écrits à la main | [4](#4-oracles) |
+| pitest : scores avant/après, mutants détectés | [5](#5-analyse-de-mutation) |
+| Tests ajoutés à la main | [6](#6-tests-écrits-à-la-main) |
+| GitHub Action | [7](#7-github-action) |
+| Déclaration d'utilisation de l'IA | [8](#8-déclaration-dutilisation-de-lia) |
 
-### Fichiers
+**Fichiers :** configuration dans [`tika-core/pom.xml`](tika-core/pom.xml) et [`Modelfile`](Modelfile) ; tests dans [`tika-core/src/test/java/org/apache/tika/mime/`](tika-core/src/test/java/org/apache/tika/mime/) ; sortie brute de ChatUniTest dans [`tache2/chatunitest-raw/`](tache2/chatunitest-raw/) ; rapports : [JaCoCo](tache2/jacoco-baseline/index.html), pitest [tests d'origine](tache2/pitest-baseline-isolated/index.html), [+ tests générés](tache2/pitest-after-generated/index.html), [final](tache2/pitest-final/index.html).
 
-| Chemin | Contenu |
+## 1. Classes choisies
+
+`org.apache.tika.mime.MediaType` (analyse et représentation des types MIME) et `org.apache.tika.mime.Patterns` (association nom de fichier → type MIME), dans le module `tika-core`. Tests existants : `MediaTypeTest`, `PatternsTest`.
+
+**Couverture JaCoCo** (toute la suite de tika-core) :
+
+| Classe | Lignes | Branches |
+|---|---|---|
+| `MediaType` | 125/155 (80,6 %) | 67/90 (74,4 %) |
+| `Patterns` | 69/77 (89,6 %) | 42/64 (65,6 %) |
+
+| Méthodes jamais exécutées | Méthodes partiellement exécutées (instructions / branches) |
 |---|---|
-| [`tika-core/pom.xml`](tika-core/pom.xml) | Configuration de PIT et de ChatUniTest (blocs « Tâche 2 ») |
-| [`tika-core/chatunitest-tests/…/org/apache/tika/io/`](tika-core/chatunitest-tests/tika-parent/tika-core/org/apache/tika/io/) | Les 12 tests **bruts**, tels que ChatUniTest les a écrits |
-| [`tika-core/src/test/java/org/apache/tika/io/EndianUtils_*_Test.java`](tika-core/src/test/java/org/apache/tika/io/) | Les mêmes tests, **intégrés** à Tika et corrigés |
-| [`EndianUtilsMutationTest.java`](tika-core/src/test/java/org/apache/tika/io/EndianUtilsMutationTest.java), [`EndianUtilsCouvertureTest.java`](tika-core/src/test/java/org/apache/tika/io/EndianUtilsCouvertureTest.java) | Les tests écrits à la main |
-| [`tache2/chatunitest-EndianUtils.log`](tache2/chatunitest-EndianUtils.log), [`tache2/chatunitest-info/`](tache2/chatunitest-info/) | Journal de la génération ; demandes envoyées au modèle, réponses et erreurs de chaque tentative |
-| [`tache2/jacoco-1-tests-originaux/`](tache2/jacoco-1-tests-originaux/index.html) … [`jacoco-4-avec-tests-de-couverture/`](tache2/jacoco-4-avec-tests-de-couverture/index.html) | Rapports de couverture JaCoCo d'`EndianUtils` pour les quatre mesures ci-dessous |
-| [`tache2/pit-1-tests-originaux/`](tache2/pit-1-tests-originaux/index.html) … [`pit-4-avec-tests-de-couverture/`](tache2/pit-4-avec-tests-de-couverture/index.html) | Rapports PIT (HTML et XML) pour les quatre mesures |
-| [`.github/workflows/tache2.yml`](.github/workflows/tache2.yml) | La GitHub Action |
+| `MediaType.set(String...)`, `set(MediaType...)`, `audio`, `video`, `MediaType(MediaType, String, String)`, `MediaType(MediaType, Charset)` | `MediaType.parse` 76 % / 72 % (lignes 277–278 jamais exécutées), `union` 22 % / 25 %, `equals` 85 % / 50 % ; `Patterns.addName` 38 % / 12 %, `addGlob` 38 % / 12 %, `matches` 92 % / 91 %, `compile` 91 % / 87 % |
 
-Les rapports portent sur quatre suites de tests, chacune comprenant la précédente :
+**pitest avec les tests d'origine*** :
 
-1. **tests d'origine** : `EndianUtilsTest`, 4 tests écrits par les développeurs de Tika ;
-2. **+ tests générés** par ChatUniTest : 22 tests (section 3) ;
-3. **+ tests écrits à la main pour les mutants survivants** : 5 tests (section 6.1) ;
-4. **+ tests écrits à la main pour les mutants non couverts** : 6 tests (section 6.2).
+| Classe | Tués | Survivants | Non couverts | Score |
+|---|---|---|---|---|
+| `MediaType` | 35 | 32 | 18 | 41,2 % |
+| `Patterns` | 12 | 17 | 15 | 27,3 % |
 
-## 1. Classe choisie
+\* `MediaTypeTest`, `PatternsTest`, `CharsetUtilsTest` et `LookaheadInputStreamTest`, exécutés ensemble.
 
-La classe étudiée est **`org.apache.tika.io.EndianUtils`**, du module `tika-core`. Elle lit des entiers en little-endian (LE), en big-endian (BE) ou en « middle-endian », depuis un flux (méthodes `read*`) ou depuis un tableau d'octets (méthodes `get*`). Elle a déjà des tests, `EndianUtilsTest`, mais ils sont loin de la couvrir entièrement :
+Mutants non tués, par méthode :
 
-| Avec les tests d'origine | Valeur |
-|---|---|
-| Lignes couvertes (JaCoCo) | 31 / 121 (25 %) |
-| Branches couvertes | 10 / 28 (35 %) |
-| Méthodes couvertes | 4 / 32 |
-| Mutants PIT : tués / survivants / non couverts | 38 / 14 / 154, sur 206 |
+| Classe | Méthode | Survivants | Non couverts |
+|---|---|---|---|
+| `MediaType` | `application`, `audio`, `image`, `text`, `video` | 0 | 1 chacune |
+| `MediaType` | `set` (×2) | 0 | 4 |
+| `MediaType` | `parse` | 5 | 3 |
+| `MediaType` | `isSimpleName` | 12 | 0 |
+| `MediaType` | `union` | 2 | 5 |
+| `MediaType` | `equals` | 3 | 1 |
+| `MediaType` | `getBaseType`, `getSubtype`, `hasParameters` | 2 chacune | 0 |
+| `MediaType` | `getType`, `compareTo` | 1 chacune | 0 |
+| `MediaType` | constructeur | 2 | 0 |
+| `Patterns` | `matches` | 0 | 9 |
+| `Patterns` | `add`, `compile` | 6 chacune | 0 |
+| `Patterns` | `addExtension` | 3 | 0 |
+| `Patterns` | `addName`, `addGlob` | 1 chacune | 3 chacune |
 
-Le [rapport JaCoCo](tache2/jacoco-1-tests-originaux/org.apache.tika.io/EndianUtils.java.html) montre en rouge les 90 lignes qu'aucun test d'origine n'exécute, et le [rapport PIT](tache2/pit-1-tests-originaux/index.html) les mutants vivants.
+**Justification des classes et des méthodes**
 
-Pourquoi cette classe :
+Nous avons retenu `MediaType` et `Patterns` parce que leurs méthodes transforment des chaînes en types, sans fichier ni réseau, et qu'elles ont déjà leurs tests (`MediaTypeTest`, `PatternsTest`). Ces tests laissent pourtant du code sans vérification. Six méthodes de `MediaType` ne sont jamais exécutées par la suite de tika-core (les deux `set`, `audio`, `video` et les constructeurs `MediaType(MediaType, String, String)` et `MediaType(MediaType, Charset)`), et seules 74,4 % et 65,6 % des branches sont couvertes.
 
-- **Ses tests d'origine sont minces.** Les 4 tests n'appellent que 4 de ses 31 méthodes publiques (`readUE7`, `readUIntLE`, `readUIntBE`, `readIntME`) : les 27 autres ne sont jamais exécutées.
-- **Même le code testé a des mutants vivants.** 14 mutants survivent. Par exemple, dans `testReadUIntBE`, le cas du flux trop court appelle `readUIntLE` au lieu de `readUIntBE` ([`EndianUtilsTest.java`, ligne 68](tika-core/src/test/java/org/apache/tika/io/EndianUtilsTest.java#L68)) : la détection de fin de flux de `readUIntBE` n'est jamais vérifiée, et 4 mutants survivent à la ligne 111.
-- **Ses résultats se calculent à la main.** Les méthodes sont statiques et sans état : on peut vérifier chaque oracle produit par le LLM.
-- **Elle manipule des octets** (masques `& 0xFF`, décalages, signe), une source classique d'erreurs qui produit beaucoup de mutants arithmétiques.
+Exécuter le code ne suffit pas à le vérifier, puisque pitest ne tue que 41,2 % des mutants de `MediaType` et 27,3 % de ceux de `Patterns`. Il reste 32 et 17 mutants survivants (le code est exécuté, mais aucune assertion ne remarque le changement) et 18 et 15 jamais atteints. Par exemple, `PatternsTest` charge toute la base MIME de Tika, soit des milliers d'appels à `Patterns.add`, sans vérifier ce travail, et n'appelle jamais `matches` avec un vrai nom de fichier.
+
+Nous visons les méthodes qui concentrent ces mutants (tableau ci-dessus). Pour `MediaType`, ce sont `isSimpleName` (12 survivants), `parse`, `union`, `equals`, `set` et les fabriques, et pour `Patterns`, `add`, `addName`, `addGlob`, `addExtension`, `matches` et `compile`.
+
+`CharsetUtils` (0 survivant, 5 non couverts) et `LookaheadInputStream` ont aussi été mesurées, puis écartées.
 
 ## 2. ChatUniTest dans le pipeline Maven
 
-ChatUniTest 2.1.1 est déclaré comme plugin Maven dans [`tika-core/pom.xml`](tika-core/pom.xml). Le LLM est **CodeQwen1.5-7B-Chat** (`codeqwen:v1.5-chat`), un modèle ouvert exécuté localement par **Ollama**, que ChatUniTest interroge par son API compatible OpenAI (`http://localhost:11434/v1/chat/completions`).
+ChatUniTest 2.1.1 est déclaré comme plugin dans [`tika-core/pom.xml`](tika-core/pom.xml), sans être lié à une phase : la CI ne l'exécute donc pas.
 
 ```xml
 <plugin>
@@ -69,397 +82,174 @@ ChatUniTest 2.1.1 est déclaré comme plugin Maven dans [`tika-core/pom.xml`](ti
     <apiKeys>ollama</apiKeys>
     <model>codeqwen:v1.5-chat</model>
     <url>http://localhost:11434/v1/chat/completions</url>
+    <thread>false</thread>
     <testNumber>1</testNumber>
     <maxRounds>3</maxRounds>
-    <maxPromptTokens>3000</maxPromptTokens>
-    <maxResponseTokens>1024</maxResponseTokens>
-    <temperature>0.2</temperature>
-    <thread>false</thread>
     <merge>false</merge>
-    <tmpOutput>${project.build.directory}/chatunitest-info</tmpOutput>
-    <testOutput>${project.basedir}/chatunitest-tests</testOutput>
   </configuration>
 </plugin>
 ```
 
-| Option | Raison |
-|---|---|
-| `apiKeys` | ChatUniTest exige une clé non vide ; Ollama l'ignore. |
-| `model` | Nom reconnu à la fois par ChatUniTest, qui n'accepte qu'une liste fermée de modèles, et par Ollama. |
-| `testNumber`, `maxRounds` | Un test par méthode, avec au plus deux tours de réparation, pour garder une durée raisonnable sur un ordinateur portable. |
-| `temperature` | Une valeur basse donne des réponses plus stables. |
-| `thread=false` | Un LLM local traite les demandes une par une. En parallèle, elles s'accumulent et dépassent le délai HTTP de 5 minutes de ChatUniTest. |
-| `merge=false` | La classe « suite » que ChatUniTest fusionne utilise `@RunWith(JUnitPlatform.class)`, de JUnit 4, absent de Tika, qui utilise JUnit 6. |
-| `tmpOutput`, `testOutput` | Les fichiers de travail vont dans `target/` ; les tests produits vont dans `tika-core/chatunitest-tests/`, hors des sources de Tika. |
+- **Modèle :** `qwen2.5-coder:3b` dans Ollama 0.35.1, sur processeur (Windows 11, 16 Go de RAM, carte graphique intégrée). Le [`Modelfile`](Modelfile) (`FROM qwen2.5-coder:3b`, `PARAMETER num_ctx 16384`) crée le nom `codeqwen:v1.5-chat`, l'un des seuls que ChatUniTest 2.1.1 accepte, avec un contexte de 16 384 jetons pour ses invites (jusqu'à environ 10 900 jetons).
+- **Taille du modèle :** ChatUniTest abandonne toute réponse après 5 minutes.
 
-Dépendances de test ajoutées :
+| Modèle | Écriture | Lecture | Requête réaliste |
+|---|---|---|---|
+| `qwen2.5-coder:7b` | 3,67 jetons/s | 11,55 jetons/s | plus de 5 min estimées (réponse de 1 024 jetons : environ 4 min 40 s) |
+| `qwen2.5-coder:3b` | 7,17 jetons/s | 29,13 jetons/s | 3 min 14 s (classe `Patterns` entière) |
 
-```xml
-<dependency>
-  <groupId>org.mockito</groupId>
-  <artifactId>mockito-core</artifactId>
-  <scope>test</scope>
-</dependency>
-<dependency>
-  <groupId>org.mockito</groupId>
-  <artifactId>mockito-junit-jupiter</artifactId>
-  <version>${mockito-junit-jupiter.version}</version>
-  <scope>test</scope>
-</dependency>
-<dependency>
-  <groupId>io.github.ZJU-ACES-ISE</groupId>
-  <artifactId>chatunitest-starter</artifactId>
-  <version>1.4.0</version>
-  <type>pom</type>
-  <scope>test</scope>
-  <exclusions>
-    <exclusion><groupId>org.mockito</groupId><artifactId>*</artifactId></exclusion>
-    <exclusion><groupId>net.bytebuddy</groupId><artifactId>*</artifactId></exclusion>
-    <exclusion><groupId>org.junit.vintage</groupId><artifactId>*</artifactId></exclusion>
-    <exclusion><groupId>org.junit.platform</groupId><artifactId>junit-platform-runner</artifactId></exclusion>
-  </exclusions>
-</dependency>
-```
-
-Génération des tests de la classe entière :
-
-```
-ollama pull codeqwen:v1.5-chat
-.\mvnw.cmd -pl tika-core chatunitest:class -DselectClass=EndianUtils
-```
+- **Options :** une requête à la fois (`thread=false`), 1 test par méthode (défaut : 5), 3 tours (défaut : 5), pas de classe « suite » JUnit 4 (`merge=false`).
+- **Dépendances de test ajoutées :** `mockito-core`, `mockito-junit-jupiter`, `junit-jupiter-params`, car l'invite de ChatUniTest demande « JUnit5 and Mockito ».
+- **Commandes** (depuis `tika-core/`) : `../mvnw chatunitest:class -DselectClass=Patterns`, puis `-DselectClass=MediaType`.
+- **Preuve d'installation :** [`tache2/chatunitest-plugin-check.txt`](tache2/chatunitest-plugin-check.txt).
 
 ## 3. Tests générés
 
-### 3.1 Résultat de la génération
+- **Où :** sortie brute dans [`tache2/chatunitest-raw/`](tache2/chatunitest-raw/) (tests produits, erreurs de compilation de chaque tour, journaux) ; versions corrigées dans `tika-core/src/test/java/org/apache/tika/mime/` (`MediaType_*_Test.java`, `Patterns_*_Test.java`, chaque correctif marqué `// FIX (...)`).
+- **Méthodes ignorées par ChatUniTest :** constructeurs, méthodes privées, et noms commençant par `get`, `set` ou `is` (donc `MediaType.set(...)`, `getBaseType`, `getType`, `getSubtype`).
+- **Durées :** 27 min 49 s (`Patterns`, 9 requêtes), 59 min 34 s (`MediaType`).
 
-Pour chaque méthode, ChatUniTest envoie au modèle la méthode et le contexte de sa classe, extrait le code Java de la réponse, le compile, puis l'exécute. En cas d'erreur, il renvoie le message au modèle et lui demande de corriger, jusqu'à 3 tours. La génération des 31 méthodes a pris 4 h 03 (72 appels au modèle).
-
-| Résultat | Méthodes | Nombre |
-|---|---|---|
-| Test produit au premier tour | `getShortLE(byte[], int)`, `getUShortLE` ×2, `getShortBE(byte[], int)`, `getUShortBE` ×2, `getUIntLE(byte[], int)`, `getUIntBE(byte[], int)`, `ubyteToInt`, `getUByte` | 10 |
-| Test produit après réparation | `getIntBE(byte[])` au 2e tour, `getShortBE(byte[])` au 3e tour | 2 |
-| Aucun test après 3 tours | les 12 méthodes `read*`, `getShortLE(byte[])`, `getIntLE` ×2, `getIntBE(byte[], int)`, `getUIntLE(byte[])`, `getUIntBE(byte[])`, `getLongLE` | 19 |
-
-Sur 21 méthodes ratées au premier tour, 2 seulement ont été rattrapées par la réparation automatique. Erreur du dernier tour pour les 19 méthodes sans test, d'après [`tache2/chatunitest-info/error-message/`](tache2/chatunitest-info/error-message/) :
-
-| Cause | Méthodes | Nombre |
-|---|---|---|
-| `BufferUnderrunException` introuvable : le modèle l'importe depuis `org.apache.tika.exception` ou `org.apache.tika.io`, alors que c'est une classe interne, `EndianUtils.BufferUnderrunException` | `readShortLE`, `readShortBE`, `readUShortLE`, `readUShortBE`, `readUIntLE`, `readUIntBE`, `readIntLE`, `readIntBE`, `readIntME`, `readLongBE` | 10 |
-| Même exception, vérifiée mais ni attrapée ni déclarée (`throws`) | `readLongLE` | 1 |
-| Valeur supérieure à 127 dans un `byte[]` sans conversion : `new byte[] {0xFF}` ne compile pas, car un octet Java est signé | `readUE7`, `getIntLE(byte[], int)`, `getIntBE(byte[], int)`, `getUIntLE(byte[])`, `getUIntBE(byte[])`, `getLongLE` | 6 |
-| Variable non finale utilisée dans une lambda | `getShortLE(byte[])` | 1 |
-| Le test plante à l'exécution (`ArrayIndexOutOfBoundsException` : tableau trop court) | `getIntLE(byte[])` | 1 |
-
-Pour `getUIntBE(byte[])`, les deux tours de réparation n'ont même pas fourni de code exploitable. Ailleurs, le modèle recevait bien le message du compilateur, mais ne savait pas en tirer la correction : pour `BufferUnderrunException`, il a essayé d'autres paquets sans jamais trouver la classe interne.
-
-### 3.2 Où sont les tests générés
-
-- **Version brute**, telle que ChatUniTest l'a écrite : [`tika-core/chatunitest-tests/tika-parent/tika-core/org/apache/tika/io/`](tika-core/chatunitest-tests/tika-parent/tika-core/org/apache/tika/io/). Elle est conservée pour comparaison, et le build ne la compile pas.
-- **Version intégrée** à la suite de Tika : `tika-core/src/test/java/org/apache/tika/io/EndianUtils_<méthode>_<numéro>_0_Test.java`, 12 classes et 22 méthodes de test. Le numéro est l'indice de la méthode testée dans `EndianUtils`, ce qui distingue les surcharges.
-
-### 3.3 Compilent-ils et s'exécutent-ils sans intervention ?
-
-**Dans ChatUniTest, oui en apparence.** Les 12 tests compilent, et ChatUniTest affiche « compile and execute successfully » pour chacun. Pourtant, sa propre exécution JUnit montre 6 méthodes de test en échec, dans 5 fichiers. ChatUniTest ne rejette un test que s'il ne compile pas ou s'il lève une exception inattendue. Une assertion qui échoue, c'est-à-dire un oracle faux, est acceptée.
-
-**Dans le build de Tika, non.** Checkstyle s'exécute avant la compilation (phase `validate`) et fait échouer le build. Chaque fichier viole au moins trois de ses règles :
-
-- l'en-tête de licence Apache est absent (`RegexpHeader`) ;
-- il contient des `import ...*` (`AvoidStarImport`) ;
-- il a des imports inutiles (`UnusedImports`) : Mockito, `ExtendWith`, `TikaException`, `IOException` et `InputStream`, que ChatUniTest ajoute à tous les tests.
-
-**Corrections de forme, automatiques, sur les 12 fichiers :**
-
-1. Remplacer les imports `*` par des imports précis, en une commande :
-
-   ```
-   powershell -NoProfile -Command "Get-ChildItem tika-core\src\test\java\org\apache\tika\io\EndianUtils_*_Test.java | ForEach-Object { $t = [IO.File]::ReadAllText($_.FullName); $t = $t.Replace('import static org.mockito.Mockito.*;', '').Replace('import org.mockito.*;', '').Replace('import org.junit.jupiter.api.*;', 'import org.junit.jupiter.api.Test;').Replace('import static org.junit.jupiter.api.Assertions.*;', 'import static org.junit.jupiter.api.Assertions.assertEquals;' + [char]10 + 'import static org.junit.jupiter.api.Assertions.assertThrows;'); [IO.File]::WriteAllText($_.FullName, $t) }"
-   ```
-
-2. Lancer l'outil de formatage de Tika, `.\mvnw.cmd -pl tika-core spotless:apply`. Il ajoute l'en-tête de licence, supprime les imports inutiles, trie les imports et passe les fins de ligne au format Unix.
-
-Après ces deux étapes, Checkstyle ne signale plus aucune violation, et les 22 méthodes de test s'exécutent : 16 passent et 6 échouent, les mêmes que dans ChatUniTest.
-
-**Corrections de fond, à la main : 6 lignes dans 5 fichiers.** Chaque valeur a été vérifiée en exécutant `EndianUtils`.
-
-| Test | Problème | Correction | Justification |
+| Méthode | Message de ChatUniTest | Tests qui passent tels quels | Après correction |
 |---|---|---|---|
-| `EndianUtils_getUShortBE_19_0_Test.testGetUShortBE` | Oracle faux : attend `0x0201` | `0x0203` | Les octets 2 et 3 de `{0, 1, 2, …, 7}` valent `0x02` et `0x03`. |
-| `EndianUtils_getUIntLE_25_0_Test.testGetUIntLE` | Oracle faux : lit `{0, 0, 0, 1}` comme du big-endian et attend `1` | `0x01000000L` | En little-endian, le dernier octet est celui de poids fort. |
-| `EndianUtils_ubyteToInt_29_0_Test.testUbyteToInt` | Oracle faux : attend `0xF2` pour `(byte) -34` | `0xDE` | -34 sans signe vaut 256 − 34 = 222 = `0xDE`. Le modèle a confondu avec -14, qui vaut `0xF2`. |
-| `EndianUtils_getShortBE_16_0_Test.testGetShortBE` | Test contradictoire : après avoir vérifié le résultat, il exige une exception sur le même tableau valide | `getShortBE(new byte[] { 0 })` | Le commentaire du test annonce « un tableau invalide » : avec un seul octet, la lecture déborde bien. |
-| `EndianUtils_getShortBE_17_0_Test.testGetShortBEWithNullData` | Appel par réflexion : la `NullPointerException` attendue arrive enveloppée dans une `InvocationTargetException` | Appel direct `EndianUtils.getShortBE(data, offset)` | La méthode est publique : la réflexion était inutile. |
-| `EndianUtils_getShortBE_17_0_Test.testGetShortBEWithOffsetOutOfBounds` | Même problème avec `ArrayIndexOutOfBoundsException` | Appel direct | Même raison. |
+| `Patterns.add` (×2), `matches` | échec de compilation aux 3 tours | aucun fichier | 22 tests repris des dernières tentatives |
+| `MediaType.application` | « compile and execute successfully » | 3/8 | 7/7 |
+| `MediaType.image` | « compile and execute successfully » | 0/4 | 2/2 |
+| `MediaType.text` | « compile and execute successfully » | 3/16 | 4/4 |
+| `MediaType.video`, `hasParameters` | réussi (tests en échec retirés par ChatUniTest) | 11/11 | 11/11 |
+| `MediaType.equals` | « compile and execute successfully » | 15/17 | 17/17 |
+| `MediaType.compareTo` | « compile and execute successfully » | 0/5 | 5/5 |
+| `MediaType.audio`, `parse`, `toString`, `hashCode` | échec de compilation aux 3 tours | aucun fichier | non repris |
+| **Total `MediaType`** | | **32/61** | **46/46** |
 
-**Bilan : aucun test n'a été intégrable sans intervention.** Les 12 fichiers ont demandé les mêmes corrections de forme, automatisables. 6 méthodes de test sur 22 ont demandé une correction de fond d'une ligne : 3 oracles faux, 1 donnée d'entrée contradictoire et 2 appels par réflexion. Après ces corrections, les 22 tests passent.
+**Erreurs de compilation du dernier tour** (fichiers `*_CompilationError_2.txt`) :
 
-## 4. Oracles : tests générés et tests écrits à la main
-
-Ici, les tests écrits à la main sont ceux d'origine, `EndianUtilsTest`, écrits par les développeurs de Tika.
-
-| | Tests écrits à la main | Tests générés par ChatUniTest |
-|---|---|---|
-| Méthodes testées | 4 méthodes `read*` | 11 méthodes appelées directement (des `get*`, `ubyteToInt`, `getUByte`) et 2 autres par délégation ; aucune méthode `read*` |
-| Type d'oracle | Valeurs exactes, tirées du format : par exemple, un exemple documenté pour le middle-endian | Valeurs exactes, calculées de tête par le modèle ; exceptions |
-| Choix des données | Octets de poids fort (`0xF0`, `0xFF`), qui vérifient le traitement non signé (`4294967280L`) | Souvent des octets nuls (`{0, 0, 0, 1}`) ou de petites valeurs (`0x12`, `0x34`) |
-| Exceptions vérifiées | `BufferUnderrunException`, le contrat documenté par `@throws` | `NullPointerException` et `ArrayIndexOutOfBoundsException`, un comportement que la documentation ne promet pas |
-| Erreurs | 1 copier-coller (`testReadUIntBE` appelle `readUIntLE`) | 3 valeurs fausses, 1 test contradictoire, 2 mauvais usages de la réflexion : 6 méthodes sur 22 |
-| Style | Une méthode de test par méthode testée, avec plusieurs cas | Réflexion inutile dans 4 classes ; mauvaise surcharge testée dans `getUShortLE_14` ; imports inutiles dans toutes les classes |
-
-Ce qu'on en retient :
-
-- **Quand ils sont justes, les oracles générés sont forts.** Ce sont des `assertEquals` sur des valeurs exactes, et 16 méthodes de test sur 22 sont correctes. Certains choix sont bons : `getIntBE_22` place un 1 à chaque position tour à tour, puis teste `0xFF` partout, ce qui tue tous les mutants non équivalents de `getIntBE`.
-- **Mais 3 oracles sur 22 sont faux** : une erreur de calcul, une confusion LE/BE et une erreur de complément à deux. Comme ChatUniTest les présente comme réussis, une relecture humaine reste indispensable : un oracle faux ne détecte aucun bogue, il en signale un qui n'existe pas.
-- **Les données choisies par le modèle détectent moins bien les erreurs arithmétiques.** Avec des octets nuls, un décalage ou une soustraction faussés ne changent pas le résultat : 5 mutants de `getIntLE` survivent pour cette raison (section 5.4).
-- **Les deux suites se complètent.** Les tests écrits à la main couvrent les méthodes `read*`, où le LLM a échoué. Les tests générés couvrent les méthodes `get*`, que personne ne testait.
-
-## 5. Analyse de mutation avec PIT
-
-### 5.1 Configuration
-
-PIT 1.30.0 est ajouté à [`tika-core/pom.xml`](tika-core/pom.xml) :
-
-```xml
-<plugin>
-  <groupId>org.pitest</groupId>
-  <artifactId>pitest-maven</artifactId>
-  <version>1.30.0</version>
-  <dependencies>
-    <dependency>
-      <groupId>org.pitest</groupId>
-      <artifactId>pitest-junit5-plugin</artifactId>
-      <version>1.2.3</version>
-    </dependency>
-  </dependencies>
-  <configuration>
-    <targetClasses>
-      <param>org.apache.tika.io.EndianUtils*</param>
-    </targetClasses>
-    <targetTests>
-      <param>org.apache.tika.*</param>
-    </targetTests>
-    <outputFormats>
-      <outputFormat>HTML</outputFormat>
-      <outputFormat>XML</outputFormat>
-    </outputFormats>
-    <timestampedReports>false</timestampedReports>
-    <parseSurefireArgLine>false</parseSurefireArgLine>
-  </configuration>
-</plugin>
-```
-
-- `pitest-junit5-plugin` permet à PIT d'exécuter les tests de la plateforme JUnit, qu'utilise Tika (JUnit 6).
-- Le motif `EndianUtils*` inclut la classe interne `BufferUnderrunException`.
-- Les mutateurs sont ceux de PIT par défaut : limites des conditions, incréments, négation des conditions, opérateurs arithmétiques et binaires, valeurs de retour, appels supprimés.
-- `parseSurefireArgLine=false` est nécessaire : la ligne de commande de Surefire, dans Tika, contient `@{surefireArgLine}` (l'agent JaCoCo), que PIT ne sait pas interpréter.
-
-Commandes, depuis la racine du dépôt (sous Linux ou macOS, remplacer `.\mvnw.cmd` par `./mvnw`) :
-
-```
-:: Compiler tika-core et exécuter tous ses tests
-.\mvnw.cmd -pl tika-core -am install
-
-:: Mesure 1 (tests d'origine) : exclure tous les tests ajoutés
-.\mvnw.cmd -pl tika-core org.pitest:pitest-maven:mutationCoverage -DexcludedTestClasses=org.apache.tika.io.EndianUtils_*_Test,org.apache.tika.io.EndianUtilsMutationTest,org.apache.tika.io.EndianUtilsCouvertureTest
-
-:: Mesure 2 (+ tests générés) : exclure les tests écrits à la main
-.\mvnw.cmd -pl tika-core org.pitest:pitest-maven:mutationCoverage -DexcludedTestClasses=org.apache.tika.io.EndianUtilsMutationTest,org.apache.tika.io.EndianUtilsCouvertureTest
-
-:: Mesures 3 et 4 : exclure seulement EndianUtilsCouvertureTest, puis aucun test
-.\mvnw.cmd -pl tika-core org.pitest:pitest-maven:mutationCoverage -DexcludedTestClasses=org.apache.tika.io.EndianUtilsCouvertureTest
-.\mvnw.cmd -pl tika-core org.pitest:pitest-maven:mutationCoverage
-```
-
-Le rapport est écrit dans `tika-core\target\pit-reports\index.html`.
-
-### 5.2 Score de mutation avec les tests originaux, puis avec les tests générés
-
-| Mesure | Tués | Survivants | Non couverts | Score de mutation | Force des tests | Rapport |
-|---|---|---|---|---|---|---|
-| 1. Tests d'origine | 38 | 14 | 154 | 18 % (38/206) | 73 % | [`pit-1-tests-originaux`](tache2/pit-1-tests-originaux/index.html) |
-| 2. + tests générés | 86 | 21 | 99 | 42 % (86/206) | 80 % | [`pit-2-avec-tests-generes`](tache2/pit-2-avec-tests-generes/index.html) |
-
-Le *score de mutation* rapporte les mutants tués au total des mutants ; la *force des tests* les rapporte aux seuls mutants exécutés par au moins un test.
-
-Les tests générés tuent 48 mutants de plus, mais **ils ne détectent pas tous les mutants** : 21 survivent et 99 ne sont exécutés par aucun test (section 5.4).
-
-### 5.3 Mutants détectés grâce aux tests générés, et pourquoi
-
-Les 48 mutants que les tests générés tuent en plus étaient tous **non couverts** auparavant : aucun test d'origine n'appelait ces méthodes. La colonne « Tués par » donne tous les tests générés qui tuent ces mutants, d'après la matrice complète de PIT (`mutations.xml`).
-
-| Méthode | Lignes | Mutants tués | Tués par | Pourquoi |
-|---|---|---|---|---|
-| `getShortLE(byte[], int)` | 270 | Valeur de retour remplacée par 0 (1) | `getShortLE_13` | Le test attend `0x3412`. |
-| `getUShortLE(byte[], int)` | 291–293 | Masques `& 0xFF` changés en `\| 0xFF` (2), `offset + 1` changé en `offset - 1`, décalage `<<` changé en `>>`, addition changée en soustraction, retour 0 (6) | `getUShortLE_14`, `getUShortLE_15`, `getShortLE_13` (par délégation) | Avec les octets `0x12` et `0x34` de `getShortLE_13`, tous deux non nuls, chaque opération compte dans le résultat. |
-| `getShortBE(byte[])` | 303 | Retour 0 (1) | `getShortBE_16` | Le test attend 1. |
-| `getShortBE(byte[], int)` | 314 | Retour 0 (1) | `getShortBE_17`, `getShortBE_16` (par délégation) | `getShortBE_17` attend -1 pour `{0xFF, 0xFF}`. |
-| `getUShortBE(byte[])` | 324 | Retour 0 (1) | `getUShortBE_18` | Le test attend `0x1234`. |
-| `getUShortBE(byte[], int)` | 335–337 | Mêmes 6 mutants que `getUShortLE` (6) | `getUShortBE_18`, `getUShortBE_19`, `getShortBE_17` et, pour 5 d'entre eux, `getShortBE_16` | Même raison, par exemple avec `{0x12, 0x34}` dans `getUShortBE_18`. |
-| `getIntLE(byte[], int)` | 359–363 | `i++` changé en `i--` sur les 3 premières lectures, masques (4), décalage de l'octet de poids fort, retour 0 (9) | `getUIntLE_25` (oracle corrigé) | Décaler la position de lecture ou remplacer un masque change l'octet lu ; `1 << 24` devient 0 avec `>>`. |
-| `getIntBE(byte[])` | 373 | Retour 0 (1) | `getIntBE_22` | |
-| `getIntBE(byte[], int)` | 385–389 | `i++` (3), masques (4), décalages (3), additions (3), retour 0 (14) | `getIntBE_22` (les 14), `getUIntBE_27` (9) | `getIntBE_22` place un 1 à chaque position tour à tour : chaque décalage et chaque addition compte. |
-| `getUIntLE(byte[], int)` | 411 | Masque `0xFFFFFFFF` changé en OU, retour 0 (2) | `getUIntLE_25` (oracle corrigé) | Le OU avec `0xFFFFFFFF` donne `0xFFFFFFFF` au lieu de `0x01000000`. |
-| `getUIntBE(byte[], int)` | 433 | Mêmes 2 mutants (2) | `getUIntBE_27` | |
-| `ubyteToInt(byte)` | 461 | `& 0xFF` changé en `\| 0xFF`, retour 0 (2) | `ubyteToInt_29` (oracle corrigé) | `0x12 \| 0xFF` vaut `0xFF` et non `0x12`. |
-| `getUByte(byte[], int)` | 472 | Mêmes 2 mutants (2) | `getUByte_30` | Le test attend 3. |
-
-14 de ces 48 mutants ne sont tués que par des tests corrigés à la main (section 3.3) : `getUIntLE_25` (11), `ubyteToInt_29` (2) et `getShortBE_16` (1). Sans correction, ces tests échouaient sur le code d'origine, et PIT ne pouvait pas s'en servir.
-
-### 5.4 Mutants que les tests générés ne détectent pas
-
-**21 mutants survivent** : les 14 des tests d'origine, que les tests générés ne touchent pas puisqu'ils n'appellent aucune méthode `read*`, et 7 nouveaux.
-
-| Méthode (ligne) | Mutants | Pourquoi ils survivent |
-|---|---|---|
-| `readUIntLE` (92) | `< 0` changé en `<= 0` ; 2 des 3 OU changés en ET | Aucun test ne lit quatre octets nuls. La fin de flux n'est testée qu'au 4e octet, et un -1 en 4e position suffit à rendre le résultat négatif, même si un OU devient un ET. |
-| `readUIntBE` (111) | `< 0` changé en `<= 0` ; les 3 OU changés en ET | Mêmes raisons ; de plus, le cas du flux trop court n'est jamais exécuté, à cause du copier-coller de `testReadUIntBE`. |
-| `readIntME` (168) | `< 0` changé en `<= 0` ; 2 OU changés en ET | Comme `readUIntLE`. |
-| `readUE7` (235) | `>= 0` changé en `> 0` ; `read++ < max` changé en `<=` ; `read++` changé en `read--` | Aucun test ne contient d'octet `0x00`, ni de valeur codée sur plus de 6 octets. |
-| `readUE7` (246) | `i < 0` changé en `i <= 0` | Aucun test ne se termine par un octet `0x00`. |
-| `getIntLE` (363) | 2 décalages, 3 additions | Seul le test de `getUIntLE` appelle cette méthode, avec `{0, 0, 0, 1}` : décaler ou soustraire un octet nul ne change rien. |
-| `getIntLE` (362), `getIntBE` (388) | Dernier `i++` changé en `i--` | Mutants équivalents (section 6.3). |
-
-**99 mutants ne sont exécutés par aucun test.** Ils se trouvent dans 14 méthodes que ni les tests d'origine ni les tests générés n'appellent, surtout les méthodes `read*` où ChatUniTest a échoué (section 3.1) :
-
-| Méthodes | Mutants non couverts |
+| Méthode | Erreurs |
 |---|---|
-| `readShortLE`, `readShortBE` | 1 + 1 |
-| `readUShortLE`, `readUShortBE` | 6 + 6 |
-| `readIntLE`, `readIntBE` | 12 + 12 |
-| `readLongLE`, `readLongBE` | 24 + 24 |
-| `getLongLE` | 8 |
-| `getShortLE(byte[])`, `getUShortLE(byte[])`, `getIntLE(byte[])`, `getUIntLE(byte[])`, `getUIntBE(byte[])` | 5 × 1 |
+| `Patterns.add`, `matches` | paquets `org.junit.jupiter.params` et `org.mockito.junit.jupiter` absents ; accès aux champs privés `names` et `extensions` ; `String` passée là où un `MediaType` est attendu |
+| `MediaType.parse` | imports statiques de classes ; constantes privées de `MediaType` recopiées |
+| `MediaType.audio` | `MediaType.audio` utilisé comme un champ |
+| `MediaType.hashCode` | annotations mal importées ; `@CsvSource` converti en `MediaType` |
+| `MediaType.toString` | constructeur inexistant `MediaType(String, String, Charset)` |
+
+**Compilent-ils et s'exécutent-ils sans intervention ?** Non : aucun des 10 fichiers. Tous ont demandé des corrections de forme exigées par Checkstyle (en-tête de licence, imports `*`, imports inutiles). Corrections de fond :
+
+| Fichier | Corrections |
+|---|---|
+| `MediaType_application` | 4 valeurs attendues corrigées, 3 assertions et 1 test retirés |
+| `MediaType_text` | 1 valeur attendue corrigée, 12 tests retirés |
+| `MediaType_equals` | 6 assertions retirées (2 tests) |
+| `MediaType_image` | préparation Mockito (`@InjectMocks`) retirée, 4 appels par réflexion remplacés par des appels directs, 1 valeur attendue corrigée, 2 tests retirés |
+| `MediaType_compareTo` | préparation Mockito (`@InjectMocks`) retirée |
+| `MediaType_video`, `MediaType_hasParameters` | aucune |
+| `Patterns_*` (3 fichiers) | 27 tests générés, 22 conservés, 31 correctifs : 10 `oracle`, 11 `access`, 4 `setup`, 4 `compile`, 2 retraits (5 tests) ([`tache2/fixes-log.md`](tache2/fixes-log.md)) |
+
+**Explication et critique des tests générés**
+
+Aucun des 10 fichiers n'était utilisable tel quel. Tous ont demandé des corrections de forme (Checkstyle), et 8 des corrections de fond. Pour `Patterns`, aucun fichier n'a compilé, car les mêmes erreurs (accès aux champs privés `names` et `extensions`, `String` passée à `new MimeType(...)`) reviennent aux trois tours de réparation, comme pour quatre méthodes de `MediaType`. Le modèle ne sait donc pas corriger ses propres erreurs de compilation. Pour `MediaType`, 32 des 61 tests réussissaient tels que générés, et les 46 conservés réussissent tous après correction.
+
+Le modèle attend souvent un comportement que Tika n'a pas. Les 12 tests retirés de `text` attendaient `null` pour des entrées comme `"invalid/type"`, alors que `parse` ne vérifie que la syntaxe. Dans `application`, il attend `"application/json"` pour `parse("application/json; charset=utf-8").toString()`, alors que Tika garde le paramètre, et `null` pour `parse("application/json;")`, que Tika accepte. ChatUniTest a pourtant affiché « compile and execute successfully » pour `image` et `compareTo`, dont aucun test ne réussissait (0 sur 4 et 0 sur 5). L'échec venait de l'initialisation Mockito (`@InjectMocks MediaType`), que son filtre d'erreurs ne reconnaît pas.
+
+Beaucoup de tests n'apportent rien. Par exemple, 13 des 17 tests de `equals` ont un corps identique, et les 10 tests de `hasParameters` ne testent jamais le cas `false`. Pour `Patterns`, il a fallu 31 correctifs (10 `oracle`, 11 `access`, 4 `setup`, 4 `compile` et 2 retraits portant sur 5 tests). Les tests lisaient des champs privés, simulaient des méthodes que `Patterns` n'appelle jamais (`getName()`, `getExtension()`) et portaient des noms trompeurs (`testAddExtension` enregistre un nom exact, `testAddGlobConflict` une extension).
+
+Une fois corrigés, ces tests sont utiles. Le score passe de 41,2 % à 63,5 % pour `MediaType` et de 27,3 % à 88,6 % pour `Patterns`, pour environ 1 h 27 de génération. Les valeurs corrigées suivent le comportement réel de Tika et ses propres tests (par exemple `testParseNoParamsWithSemi`), plusieurs tests faux ont été retirés plutôt que corrigés, et des oracles simples comme `testParseSimple` tuent même des mutants dans des méthodes que ChatUniTest saute. Les mutants restants de `MediaType` viennent des méthodes que l'outil saute (`set`, qu'il prend pour un mutateur, les constructeurs et `getBaseType`), de la génération ratée d'`audio` et d'entrées jamais essayées (charset en tête, cas `false` de `hasParameters`, `equals` avec un autre type d'objet). Ceux de `Patterns` viennent de deux cas que le modèle n'a pas imaginés, soit un conflit sur un vrai glob et un nom exact face à une extension.
+
+## 4. Oracles
+
+Les oracles de Tika pour `MediaType` sont précis, avec des chaînes exactes même pour les cas tordus. Par exemple, `testOddParameters` exige que `parse("text/html;; charset=UTF-8")` s'écrive `"text/html; charset=UTF-8"`, et `testParseNoParamsWithSemi` que `parse("text/html;")` soit accepté sans paramètre. Le test `testParseWithParams` est plus faible, puisqu'il se contente de `assertNotNull`, d'une taille et de booléens. Ceux de `PatternsTest` sont pauvres, car `testAdd` et `testMatches` vérifient seulement qu'un `null` lève `IllegalArgumentException`, `testExtension` lit `getExtension()` après `add("*.doc")` sans appeler `matches()`, et rien ne teste la priorité entre motifs.
+
+Les oracles générés ont aussi des valeurs exactes, mais souvent fausses. Par exemple, `assertNull(MediaType.parse("application/json;"))` est le contraire de ce que vérifie `testParseNoParamsWithSemi`, qui accepte `parse("text/html;")`, et `assertEquals("application/json", MediaType.parse("application/json; charset=utf-8").toString())` oublie que `toString()` garde les paramètres, comme dans `testOddParameters`. Ils sont aussi souvent faibles ou redondants, avec seulement des `assertTrue` pour `hasParameters`, un type ou un mock unique pour tous les tests de `Patterns` (impossible alors de savoir quel motif a répondu) et 13 tests identiques pour `equals`. Quand ils sont justes, ils restent simples mais utiles (`testParseSimple`). Tika est donc exigeant sur `MediaType` et peu sur `Patterns`, alors que le modèle écrit des valeurs exactes, souvent sans connaître le comportement réel.
+
+## 5. Analyse de mutation
+
+pitest 1.25.9 (`pitest-junit5-plugin` 1.2.3, mutateurs par défaut) dans [`tika-core/pom.xml`](tika-core/pom.xml), avec `mutationUnitSize=1` (un mutant par JVM). Depuis `tika-core/` :
+
+```
+../mvnw test-compile org.pitest:pitest-maven:mutationCoverage '-Dpit.targetTests=${pit.baselineTests}' -DreportsDirectory=../tache2/pitest-baseline-isolated
+../mvnw test-compile org.pitest:pitest-maven:mutationCoverage '-Dpit.targetTests=${pit.baselineTests},${pit.generatedTests}' -DreportsDirectory=../tache2/pitest-after-generated
+../mvnw test-compile org.pitest:pitest-maven:mutationCoverage -DreportsDirectory=../tache2/pitest-final
+```
+
+| Classe | Mesure | Tués | Survivants | Non couverts | Score de mutation |
+|---|---|---|---|---|---|
+| `MediaType` | Tests d'origine | 35 | 32 | 18 | 41,2 % |
+| `MediaType` | + tests générés | 54 | 19 | 12 | 63,5 % |
+| `MediaType` | + tests écrits à la main | 76 | 9 | 0 | 89,4 % |
+| `Patterns` | Tests d'origine | 12 | 17 | 15 | 27,3 % |
+| `Patterns` | + tests générés | 39 | 2 | 3 | 88,6 % |
+| `Patterns` | + tests écrits à la main | 44 | 0 | 0 | 100 % |
+
+**Les tests générés détectent-ils tous les mutants ?** Non : après eux, 31 mutants de `MediaType` et 5 de `Patterns` restent vivants ([rapport](tache2/pitest-after-generated/index.html)).
+
+**JVM partagée ou un mutant par JVM**
+
+Par défaut, pitest exécute plusieurs mutants dans la même JVM, ce qui fausse les résultats de `MediaType`. On obtient alors 48, 65 puis 84 mutants tués sur 85, contre 35, 54 puis 76 avec un mutant par JVM (`Patterns` donne les mêmes scores dans les deux modes). En effet, pitest remplace le bytecode de chaque mutant sans réinitialiser les champs statiques, donc les entrées du cache `SIMPLE_TYPES` créées pendant un mutant restent pour les suivants. Le mutant de la ligne 257 (`return null` remplacé par `return null`), identique au code d'origine, est ainsi déclaré tué. Nous ne savons pas quels sont les 8 mutants en trop, car le rapport final en JVM partagée n'a pas été conservé. Tous nos résultats utilisent donc un mutant par JVM.
+
+### Mutants détectés grâce aux tests générés
+
+`MediaType` : 19 mutants de plus que les tests d'origine. `Patterns` : 27.
+
+| Classe | Ligne(s) | Mutation | Tué par | Pourquoi |
+|---|---|---|---|---|
+| `MediaType` | 103 (×2) | calcul de `semicolon` modifié (constructeur) | `application.testParseWithEmptyParameters` | `parse("application/json; ")` passe par le constructeur, qui calcule la position du point-virgule. Si elle est fausse, `getSubtype()` n'est plus `"json"`. |
+| `MediaType` | 181, 189, 193, 197 | `application`, `image`, `text`, `video` retournent `null` | `testApplication`, `testImageWithValidType`, `testTextMethod`, `testVideoMethod` | Chaque test appelle la fabrique avec un sous-type valide (`application("json")`, `image("png")`, `text("plain")`, `video("mp4")`), donc un retour `null` fait échouer l'assertion. |
+| `MediaType` | 277 | condition inversée (`parse`) | `image.testImageWithEmptyType` | `image("")` revient à `parse("image/")`. Avec la condition inversée, le code entre dans la branche « charset en premier » sans correspondance, et `matcher.group()` lève une exception. |
+| `MediaType` | 288 (×2) | conditions inversées (`isSimpleName`) | `application.testParseInvalid` | `parse("application/json/")` a un `/` de trop que le chemin rapide doit refuser. Avec une condition inversée, `parse` retourne un type au lieu de `null`. |
+| `MediaType` | 293 (×2) | `> 0` → `>= 0` ; retourne `true` (`isSimpleName`) | `image.testImageWithEmptyType` | Avec `image("")`, si la condition devient `>= 0` ou si le retour est toujours vrai, le nom vide est accepté et le résultat est `image/` au lieu de `null`. |
+| `MediaType` | 379, 387 (×2) | `getType`, `getSubtype` retournent `""` ; `slash + 1` modifié | `application.testParseSimple` | `testParseSimple` compare `getType()` et `getSubtype()` à des valeurs exactes (`application/octet-stream`, `text/plain`), donc un retour `""` ou une sous-chaîne décalée fait échouer l'égalité. |
+| `MediaType` | 398 | condition inversée (`hasParameters`) | `hasParameters.testHasParametersWithSpecialCharactersInBothKeyAndValue` | Les tests de `hasParameters` ne font que des `assertTrue` sur des types avec paramètres. Une condition inversée retourne `false` et l'assertion échoue. |
+| `MediaType` | 416, 418 | condition inversée ; retourne `false` (`equals`) | `text.testParseMethod` | `assertEquals(TEXT_PLAIN, parse("text/plain"))` appelle `equals` sur deux types égaux, donc un `equals` qui retourne `false` fait échouer l'assertion. |
+| `MediaType` | 418 | retourne `true` (`equals`) | `equals.testEqualsDifferentParameters` | `octet-stream` et `octet-stream; charset=UTF-8` ne diffèrent que par un paramètre, donc un `equals` qui retourne `true` fait échouer le `assertFalse`. |
+| `MediaType` | 429 | retourne `0` (`compareTo`) | `compareTo.testCompareToDifferentType` | `compareTo` entre deux types différents doit être non nul. Le mutant retourne `0` et `assertNotEquals(0, ...)` échoue. |
+| `Patterns` | 76, 90, 147, 148 | appel de `addName` retiré ; conditions inversées ; retourne `null` | `add_1.testAddExtension` | `add("jpg")`, sans `*`, `?` ni `[`, enregistre un nom exact (malgré le nom `testAddExtension`) que `matches("jpg")` doit retrouver. Si l'appel à `addName` est retiré, ou si l'enregistrement ou la recherche sont faussés, le type n'est plus retourné. |
+| `Patterns` | 90, 92, 93 | conditions inversées (`addName`) | `add_1.testAddExtensionConflict` | `"jpg"` est enregistré pour `image/jpeg` puis `image/png`, ce qui crée un conflit de nom. Avec les conditions inversées, il passe inaperçu et la `MimeTypeException` n'est pas levée. |
+| `Patterns` | 80, 102, 107, 108 | appel de `addExtension` retiré ; conditions inversées | `add_1.testAddGlobConflict` | `*.pdf` est une extension (malgré le nom `testAddGlobConflict`). L'enregistrer pour deux types doit lever `MimeTypeException`, ce qui n'arrive plus si l'appel à `addExtension` est retiré ou si ses contrôles sont inversés. |
+| `Patterns` | 153 (×2), 154, 155, 156 | boucle sur les extensions modifiée ; retourne `null` (`matches`) | `add_1.testAddGlob`, `matches_5.testMatchesEmptyName` | `add("*.pdf")` puis `matches("*.pdf")` parcourt la boucle sur les extensions. Si ses bornes, son indice ou son retour sont faussés, le type n'est pas trouvé, et `matches("")` lève une exception au lieu de retourner `null`. |
+| `Patterns` | 71, 117, 162, 163 | appel de `addGlob` retiré ; conditions inversées ; retourne `null` | `add_1.testAddGlobWithJavaRegex` | `add("(?i)\\.pdf$", true)` enregistre une expression régulière Java que `matches(".pdf")` doit retrouver. Si l'ajout est retiré (71), si le test de `null` est inversé (117, plantage au premier ajout) ou si la recherche par glob est faussée (162, 163), le type n'est plus retourné. |
+| `Patterns` | 83, 173 (×2), 175, 177, 179, 187 | appel de `addGlob` retiré ; conversion glob → regex modifiée (`compile`) | `matches_5.testMatchesGlobMatch` | `add("example.*")` est un vrai glob. Il doit être stocké (83) puis converti en expression régulière (`?`, `*`, échappement, bornes de la boucle, résultat vide). Si une étape est faussée, `matches("example.txt")` ne retourne plus le type. |
 
 ## 6. Tests écrits à la main
 
-Des tests ont été écrits à la main pour tous les mutants non détectés, sauf les 2 qui sont équivalents (section 6.3). Ils ont été faits rapidement à l'aide de l'IA générative (section 8), puis vérifiés avec PIT et JaCoCo. Les deux classes de tests utilisent deux méthodes utilitaires : `flux(...)` donne un flux qui contient exactement les octets indiqués ; `fluxScripte(...)` donne un flux qui renvoie les valeurs indiquées telles quelles, -1 compris, puis -1.
+[`MediaTypeHandWrittenTest.java`](tika-core/src/test/java/org/apache/tika/mime/MediaTypeHandWrittenTest.java) (12 méthodes, 14 exécutions) et [`PatternsHandWrittenTest.java`](tika-core/src/test/java/org/apache/tika/mime/PatternsHandWrittenTest.java) (2 méthodes). Parmi les mutants restés vivants après les tests générés, ils tuent 22 des 31 de `MediaType` et les 5 de `Patterns`.
 
-### 6.1 Pour les 21 mutants survivants : `EndianUtilsMutationTest`
+| Test | Mutants tués | Intention | Données et motivation | Oracle |
+|---|---|---|---|---|
+| `audioFactoryProducesAudioWavType` | 185 | `audio` retourne un type et non `null`, alors qu'aucun test ne l'exécutait. | `"wav"`, car tout sous-type valide convient. | `toString()` égal à `"audio/wav"`. |
+| `mediaTypeSetHasNoNullsOrDuplicates` | 211, 215 | `set(MediaType...)` ignore `null` et doublons et retourne un ensemble non modifiable (Javadoc). | `TEXT_PLAIN, null, application/json, TEXT_PLAIN`, soit un `null` et un doublon entre des types valides. | Taille 2, aucun élément `null`, et `add` lève `UnsupportedOperationException`. Ce test ne vérifie pas quels types l'ensemble contient. |
+| `stringSetDropsEntriesWithEmptySubtype` | 230, 234 | `set(String...)` ignore les chaînes qui ne s'analysent pas. | `"text/plain"`, `"text/"`, `"application/json"`. `"text/"` a un sous-type vide et donne `null`. | Égalité avec l'ensemble des deux types valides. |
+| `emptyTypeOrSubtypeIsRejected` | 259, 293 | `parse` refuse un type ou un sous-type vide. | `"/"` tue 293 et `"/plain"` (type vide, sous-type valide) tue 259, alors que `"text/"` seul ne tue ni l'un ni l'autre. | `assertNull` pour chaque entrée. |
+| `charsetFirstFormIsParsedIntoTypeAndParameter` | 278 | La forme `charset=...; type/sous-type` (TIKA-350) est acceptée. Les lignes 277–278 n'étaient jamais exécutées. | `"charset=windows-1252; application/json"`, avec des valeurs arbitraires dans la forme attendue. | Non `null` (le mutant retourne `null`), type de base `application/json`, charset égal à `"windows-1252"`. |
+| `asciiUpperCaseIsLowerCased` (×3) | 288 (2 mutants) | Les majuscules ASCII sont mises en minuscules, car les types sont insensibles à la casse (RFC 2045), et le chemin rapide doit les refuser. | `APPLICATION/JSON`, `Application/Json` et `application/JSON`, soit tout en majuscules, les initiales et le sous-type seul. | Égal à `parse("application/json")`. |
+| `latinOneUpperCaseIsLowerCased` | 288 (1 mutant) | Une majuscule non ASCII (au-dessus de `'z'`) est aussi mise en minuscule. | `"ÄÖ/Ü"`, uniquement des lettres non ASCII, sinon le nom prend le chemin normal même avec le mutant. | `"äö/ü"` exact. |
+| `charsetConstructorAddsCharsetParameter` | 350 | Ajouter un paramètre à un type qui n'en a pas avec le constructeur `MediaType(MediaType, Charset)`, jamais exécuté. | `TEXT_PLAIN` et `UTF_16`. Un seul constructeur suffit, car tous passent par `union`. | Égal à `parse("text/plain; charset=UTF-16")`, avec un seul paramètre. |
+| `emptyMapKeepsExistingParameters` | 349, 352 | Ajouter une table vide ne fait pas perdre les paramètres existants. | `text/html; charset=UTF-8` et `Collections.emptyMap()`, car il faut un type avec paramètres. | `charset` vaut `"UTF-8"`, avec un seul paramètre. |
+| `mergeKeepsOldAndNewParameters` | 351, 355, 356, 357 | Avec des paramètres des deux côtés, la fusion garde l'ancien et ajoute le nouveau. | `charset=UTF-8` existant et `format=flowed` ajouté, deux noms distincts. | Deux `get` aux valeurs exactes et une taille de 2. Un mutant perd l'ancien paramètre, un autre le nouveau. |
+| `baseTypeStringHasNoParameters` | 367, 370, 398 | `getBaseType` retire les paramètres, et le résultat n'en signale aucun. | `application/json; charset=UTF-8`. Il faut des paramètres au départ, sinon 367 survit. | `toString()` égal à `"application/json"` et `assertFalse(hasParameters())`. Ce cas `false`, absent des tests générés, tue le mutant « toujours vrai » (398). |
+| `equalsRejectsOtherKindsOfObject` | 420 | `equals` retourne `false` pour un objet qui n'est pas un `MediaType` (contrat d'`Object.equals`). | La `String` `"text/plain"` (même texte que `TEXT_PLAIN`) et `null`. | `assertNotEquals` avec le `MediaType` en premier argument (sinon c'est `String.equals` qui s'exécute), et `assertFalse(equals(null))`. |
+| `exactNameWinsOverExtensionPattern` | `Patterns` 74, 75 | Un nom exact l'emporte sur un motif d'extension (Javadoc de `matches`). | `*.xml` pour `application/xml` et `pom.xml` pour `application/x-maven-pom`. Deux types distincts rendent le gagnant visible. Avec les mutants, `pom.xml` devient un glob, et les extensions passent avant les globs. | `assertSame` vérifie que `pom.xml` donne le type pom et `other.xml` le type xml. |
+| `conflictingGlobWithUnrelatedTypeThrows` | `Patterns` 117, 119, 120 | Enregistrer le même glob pour deux types sans lien lève `MimeTypeException`. | `backup*.tar` (le `*` n'est pas en tête, donc c'est un glob et non une extension) pour `application/x-backup` puis `application/x-archive`, deux types qui n'étendent que `application/octet-stream`. Un type et son parent ne seraient pas en conflit. | `assertThrows(MimeTypeException.class, ...)`. |
 
-#### `quatreOctetsNulsNeSontPasUneFinDeFlux`
-- **Intention** : un octet de valeur 0 ne doit pas être pris pour une fin de flux.
-- **Données** : quatre octets nuls, lus par `readUIntLE`, `readUIntBE` et `readIntME`. Le OU des quatre octets vaut alors exactement 0, la limite entre une lecture valide (≥ 0) et une fin de flux (< 0).
-- **Oracle** : la valeur 0, sans exception.
-- **Mutants tués** : `< 0` changé en `<= 0` aux lignes 92, 111 et 168 (3).
+**Mutants encore vivants : 9 dans `MediaType`.**
 
-#### `uneFinDeFluxSuivieDOctetsEstDetectee`
-- **Intention** : chacune des quatre lectures doit être vérifiée, et pas seulement la dernière. Pour `readUIntBE`, c'est aussi le cas du flux trop court que le test d'origine voulait vérifier, mais qu'il appliquait par erreur à `readUIntLE` (section 1).
-- **Données** : un flux qui renvoie -1, puis 1, 2 et 3. Seule la première lecture échoue, comme sur une console après Ctrl-Z, dont la fin n'est pas définitive. Avec un flux ordinaire, toutes les lectures suivantes renverraient aussi -1, et la dernière suffirait à révéler la fin du flux.
-- **Oracle** : `BufferUnderrunException` pour `readUIntLE`, `readUIntBE` et `readIntME`, l'exception que ces méthodes documentent pour un flux trop court.
-- **Mutants tués** : les deux premiers OU changés en ET aux lignes 92 et 168, et les trois OU de la ligne 111 (7). Avec un ET, le -1 est combiné à un octet valide : `-1 & 1` vaut 1, et le résultat n'est plus négatif. Le troisième OU des lignes 92 et 168 était déjà tué par les tests d'origine.
-
-#### `readUE7AccepteUnDernierGroupeNul`
-- **Intention** : un dernier groupe de valeur 0 est valide.
-- **Données** : `0x81 0x00`. `0x81` est un groupe de valeur 1 avec le bit de continuation ; `0x00` est le dernier groupe, nul, et se trouve à la limite des comparaisons `>= 0` et `< 0`.
-- **Oracle** : 1 × 128 + 0 = 128.
-- **Mutants tués** : `>= 0` changé en `> 0` (ligne 235) et `i < 0` changé en `i <= 0` (ligne 246) (2).
-
-#### `readUE7NeDecodePasPlusDeSixOctets`
-- **Intention** : vérifier la limite de six groupes fixée par le code (`max = 6`).
-- **Données** : `0x81` suivi de six `0x80`, puis `0x00` : une valeur codée sur plus de six octets.
-- **Oracle** : 2³⁵, soit un groupe de valeur 1 suivi de cinq groupes nuls. Le septième octet est lu, mais ignoré. Aucune documentation ne dit ce qui doit arriver au-delà de six octets : ce test fige le comportement actuel.
-- **Mutants tués** : `read++ < max` changé en `<=` et `read++` changé en `read--` (ligne 235) (2).
-
-#### `getIntLEAvecQuatreOctetsDistinctsNonNuls`
-- **Intention** : chaque octet doit compter dans le résultat, avec son propre poids.
-- **Données** : `{1, 2, 3, 4}`, quatre octets distincts et non nuls, là où le test généré utilisait `{0, 0, 0, 1}`.
-- **Oracle** : `0x04030201` ; en little-endian, le dernier octet est celui de poids fort.
-- **Mutants tués** : 2 décalages et 3 additions à la ligne 363 (5).
-
-**Résultat (mesure 3)** : PIT tue 105 mutants ; les 19 survivants qui n'étaient pas équivalents sont tués ([`pit-3-avec-tests-manuels`](tache2/pit-3-avec-tests-manuels/index.html)).
-
-### 6.2 Pour les 99 mutants non couverts : `EndianUtilsCouvertureTest`
-
-Ces 6 tests appellent les 14 méthodes qu'aucun test n'exécutait, avec les mêmes principes : des octets distincts et non nuls, pour que chaque opération compte dans le résultat, et des valeurs à la limite des comparaisons.
-
-#### `lectureDOctetsDistinctsDepuisUnFlux`
-- **Intention** : les 8 méthodes de lecture jamais appelées (`readShortLE`, `readShortBE`, `readUShortLE`, `readUShortBE`, `readIntLE`, `readIntBE`, `readLongLE`, `readLongBE`) placent chaque octet à sa place, selon l'ordre LE ou BE.
-- **Données** : les octets 1, 2, 3… Ils sont distincts et non nuls : un décalage dans le mauvais sens, une soustraction à la place d'une addition ou un octet mal placé change forcément le résultat. Avec des octets nuls, comme dans certains tests générés, ces erreurs passent inaperçues (section 4).
-- **Oracle** : la valeur se lit directement en hexadécimal. En LE, le premier octet lu est celui de poids faible : `1, 2` donne `0x0201`. En BE, c'est celui de poids fort : `0x0102`. De même, `1, 2, …, 8` donne `0x0807060504030201` en LE et `0x0102030405060708` en BE.
-- **Mutants tués** : tous les décalages, toutes les additions et toutes les valeurs de retour de ces 8 méthodes (52).
-
-#### `octetsNulsLusSansFinDeFlux`
-- **Intention** : un octet de valeur 0 n'est pas une fin de flux. C'est le comportement vérifié par `quatreOctetsNulsNeSontPasUneFinDeFlux` (section 6.1), ici pour `readUShortLE`, `readUShortBE`, `readIntLE`, `readIntBE`, `readLongLE` et `readLongBE`.
-- **Données** : que des octets nuls. Le OU des octets lus vaut alors exactement 0, la limite entre une lecture valide (≥ 0) et une fin de flux (< 0).
-- **Oracle** : la valeur 0, sans exception.
-- **Mutants tués** : `< 0` changé en `<= 0` aux lignes 64, 73, 130, 149, 191 et 217 (6).
-
-#### `finDeFluxDetecteeMemeSiDesOctetsSuivent`
-- **Intention** : chacune des lectures doit être vérifiée, et pas seulement la dernière, comme dans `uneFinDeFluxSuivieDOctetsEstDetectee` (section 6.1), pour les mêmes 6 méthodes.
-- **Données** : un flux qui renvoie -1, puis des octets valides (1, 2, 3…). Seule la première lecture échoue.
-- **Oracle** : `BufferUnderrunException`, l'exception que ces méthodes déclarent pour un flux qui ne fournit pas assez d'octets.
-- **Mutants tués** : chaque OU changé en ET dans les conditions de fin de flux : 1 + 1 (`readUShort*`), 3 + 3 (`readInt*`) et 7 + 7 (`readLong*`), soit 22. Avec un ET, le -1 est combiné à un octet valide : `-1 & 1` vaut 1, et le résultat n'est plus négatif.
-
-La négation de ces 6 conditions (`< 0` changé en `>= 0`) inverse le test : l'exception est levée sur un flux valide, et ne l'est plus sur un flux tronqué. Ces 6 mutants sont tués par chacun des trois tests précédents.
-
-#### `readUE7SignaleUnFluxTronque`
-- **Intention** : `readUE7` doit signaler un flux qui s'arrête au milieu d'une valeur.
-- **Données** : un flux vide, puis un flux qui ne contient que `0x81`. Le bit de poids fort de `0x81` annonce un octet suivant, qui n'arrive jamais.
-- **Oracle** : une `IOException`. La méthode déclare cette exception et la lève avec le message « Buffer underun; expected one more byte » : une valeur incomplète ne doit pas être renvoyée comme si elle était valide.
-- **Mutants tués** : aucun que les autres tests ne tuent déjà. Les 5 mutants qu'il tue, comme la négation de `i < 0` (ligne 246), sont aussi tués par `EndianUtilsTest.testReadUE7`. Il sert à la couverture : il est le seul à exécuter la ligne 247 et les deux branches de fin de flux de `readUE7`, que JaCoCo signalait encore comme non couvertes après la mesure 3. Vérification faite à la main : si on supprime le test `if (i < 0)`, ce test échoue, et c'est le seul.
-
-#### `surchargesSansDecalageLisentDepuisLeDebut`
-- **Intention** : les 5 surcharges sans décalage jamais appelées (`getShortLE(byte[])`, `getUShortLE(byte[])`, `getIntLE(byte[])`, `getUIntLE(byte[])`, `getUIntBE(byte[])`) lisent à partir de l'indice 0.
-- **Données** : `{1, 2, 3, 4}`, quatre octets distincts.
-- **Oracle** : la même valeur qu'avec un décalage de 0 : `0x0201` sur 2 octets en LE, `0x04030201` sur 4 octets en LE, `0x01020304` en BE.
-- **Mutants tués** : la valeur de retour remplacée par 0, dans chacune des 5 surcharges (5). Elles ne font qu'appeler la version avec décalage, déjà testée : c'est leur seul mutant.
-
-#### `getLongLEAvecOctetsDistinctsEtDecalage`
-- **Intention** : `getLongLE` assemble 8 octets en little-endian, à partir du décalage donné.
-- **Données** : huit octets distincts `{1, …, 8}`, d'abord au début du tableau, puis précédés de deux octets `0x7F` qui doivent être ignorés (décalage de 2). Le tableau a exactement la taille nécessaire : une lecture en dehors des 8 octets lève une exception.
-- **Oracle** : `0x0807060504030201` dans les deux cas.
-- **Mutants tués** : les 8 mutants de `getLongLE` : les bornes de la boucle (`>=` changé en `>`, condition niée, `offset + LONG_SIZE - 1` changé en `offset - LONG_SIZE - 1` ou en `offset + LONG_SIZE + 1`), le décalage `<<=` changé en `>>=`, le masque `0xff &` changé en `0xff |`, `|=` changé en `&=`, et la valeur de retour (8). PIT ne crée pas de mutant `j--` changé en `j++`, qui pourrait rendre la boucle infinie.
-
-**Résultat (mesure 4)** : PIT tue 204 mutants sur 206 ; il ne reste aucun mutant non couvert ([`pit-4-avec-tests-de-couverture`](tache2/pit-4-avec-tests-de-couverture/index.html)).
-
-### 6.3 Mutants encore vivants
-
-**2 mutants survivent, et ils sont équivalents.** Aux lignes 362 (`getIntLE`) et 388 (`getIntBE`), PIT change le dernier `i++` de `int b3 = data[i++] & 0xFF;` en `i--`. L'octet lu reste `data[i]`, puisque l'incrément a lieu après la lecture, et `i` n'est plus jamais lu ensuite. Le comportement de la méthode est donc identique : aucun test ne peut tuer ces mutants.
-
-**Une seule ligne n'est pas couverte.** Avec les quatre suites, JaCoCo ne signale plus que la ligne 32 ([rapport](tache2/jacoco-4-avec-tests-de-couverture/org.apache.tika.io/EndianUtils.java.html#L32)) : c'est le constructeur implicite `EndianUtils()`. Toutes les méthodes de la classe sont statiques et rien ne crée d'instance. Un test qui appellerait `new EndianUtils()` ferait monter la couverture sans vérifier aucun comportement : il n'a donc pas été écrit. PIT ne génère d'ailleurs aucun mutant sur cette ligne.
+| Ligne | Méthode | Mutation | Pourquoi il survit |
+|---|---|---|---|
+| 254 | `parse` | condition inversée | Il ne décide que de la réutilisation de l'objet en cache. La méthode `parse` retourne un type égal mais une autre instance, que seul un `assertSame` sur deux appels détecterait (un tel test tuerait aussi 258 inversé, 259 et les quatre 288). Nous ne l'avons pas inclus, car la Javadoc de `parse` ne promet pas la même instance et le code présente le cache comme une optimisation (« Optimization for the common cases »), donc ce test vérifierait un détail d'implémentation. |
+| 257 | `parse` | retourne `null` | Le mutant remplace `return null` par `return null`, donc le code est identique et le mutant est vraiment équivalent. pitest ne le voit pas, car un `return` dans un bloc `synchronized` passe par une variable temporaire. |
+| 258 (×2) | `parse` | limite `SIMPLE_TYPES.size() < 10000` : borne modifiée ; condition inversée | Pour la borne `<` remplacée par `<=`, seule une taille de cache d'exactement 10 000 la distingue, ce qui exigerait de remplir le cache statique de la JVM. Avec la condition inversée, le type n'est plus mis en cache, et c'est le même cas que 254 (valeur égale, autre instance). |
+| 259 | `parse` | `slash + 1` modifié | Avec `slash - 1`, la sous-chaîne vérifiée contient le `/`, donc le chemin rapide refuse le nom et le chemin normal retourne un type égal. C'est le même cas que 254, seule l'identité change. |
+| 288 (×4) | `isSimpleName` | `<=` → `<` dans les bornes `'0'`, `'9'`, `'a'`, `'z'` | Aux bornes `'0'`, `'9'`, `'a'` et `'z'`, le chemin rapide refuse le caractère et le chemin normal donne le même résultat en minuscules. C'est le même cas que 254, seule l'identité change. |
 
 ## 7. GitHub Action
 
-Le workflow [`.github/workflows/tache2.yml`](.github/workflows/tache2.yml) s'exécute à chaque push sur `main` qui modifie `tika-core` ou le workflow, et peut aussi être lancé à la main. Il :
+[`.github/workflows/tache2.yml`](.github/workflows/tache2.yml) : à chaque push et pull request sur `main`, Temurin JDK 25, `./mvnw -B install -pl :tika-core -am`. Elle exécute tous les tests de `tika-core`, dont nos 84 nouveaux tests : 68 générés (46 `MediaType`, 22 `Patterns`) et 16 écrits à la main (14 `MediaType`, 2 `Patterns`). Les workflows d'Apache Tika sont passés en exécution manuelle dans ce fork.
 
-1. compile `tika-core` et exécute tous ses tests, dont les nouveaux (`./mvnw -pl tika-core -am install`) ;
-2. mesure la couverture JaCoCo d'`EndianUtils` pour chacune des quatre suites de tests ;
-3. lance PIT pour chacune des quatre suites, en excluant les tests ajoutés après la mesure (`-DexcludedTestClasses`) ;
-4. affiche les résultats dans le résumé de l'exécution et conserve les rapports dans l'artefact `tache2-rapports`, rangé comme le dossier `tache2/`.
-
-ChatUniTest n'y est pas relancé : il lui faut un LLM local, et la génération prend plusieurs heures.
-
-L'exécution [n° 37855166757](https://github.com/Toky5/tika/actions/runs/37855166757) a réussi : les 782 tests de `tika-core`, dont les 37 qui portent sur `EndianUtils`, passent sans échec (2 tests de Tika sont ignorés). Toutes les exécutions : <https://github.com/Toky5/tika/actions/workflows/tache2.yml>. Les workflows d'origine d'Apache Tika ont été désactivés sur ce fork : ils construisent tout le projet et publient des images Docker avec des secrets que le fork n'a pas.
+Exécution réussie : [n° 38191835771](https://github.com/LucBrennan/tika/actions/runs/38191835771) (833 tests de `tika-core`, 0 échec).
 
 ## 8. Déclaration d'utilisation de l'IA
 
-L'énoncé autorise l'utilisation de l'IA à condition de la documenter. Voici les usages.
-
-**ChatUniTest avec CodeQwen1.5-7B-Chat**, l'outil étudié par la tâche. Il a généré les 12 fichiers `EndianUtils_*_Test.java`. Les versions brutes, le journal et les échanges avec le modèle sont dans le dépôt (voir « Fichiers »), et les corrections sont détaillées à la section 3.3.
-
-**Claude, Opus 5.5**, l'outil à été utilisé pour aider à rediger le readme (mise en forme et saisie), assister sur les taches difficiles.
-
-## 9. Conclusion : EndianUtils avant et après
-
-| `EndianUtils` | Avant : tests d'origine | Après : tous les tests |
-|---|---|---|
-| Tests qui portent sur la classe | 4 | 37 (4 d'origine + 22 générés + 11 écrits à la main) |
-| Méthodes couvertes | 4 / 32 | 31 / 32 |
-| Lignes couvertes | 31 / 121 (25 %) | 120 / 121 (99 %) |
-| Branches couvertes | 10 / 28 (35 %) | 28 / 28 (100 %) |
-| Instructions couvertes | 158 / 685 (23 %) | 682 / 685 (99 %) |
-| Mutants tués / survivants / non couverts | 38 / 14 / 154 | 204 / 2 / 0 |
-| Score de mutation | 18 % | 99 % |
-| Force des tests | 73 % | 99 % |
-
-Étape par étape :
-
-| Mesure | Tests | Lignes couvertes | Branches couvertes | Mutants tués | Survivants | Non couverts | Score |
-|---|---|---|---|---|---|---|---|
-| 1. Tests d'origine | 4 | 31 / 121 | 10 / 28 | 38 | 14 | 154 | 18 % |
-| 2. + tests générés | 26 | 60 / 121 | 10 / 28 | 86 | 21 | 99 | 42 % |
-| 3. + tests pour les survivants | 31 | 61 / 121 | 12 / 28 | 105 | 2 | 99 | 51 % |
-| 4. + tests pour les mutants non couverts | 37 | 120 / 121 | 28 / 28 | 204 | 2 | 0 | 99 % |
-
-- **Les tests générés par ChatUniTest ont aidé, mais pas seuls.** Ils couvrent 29 lignes de plus et tuent 48 mutants de plus, mais n'ajoutent aucune branche : le modèle n'a produit de test pour aucune méthode `read*`, où se trouvent presque toutes les conditions. Aucun n'était utilisable sans retouche, et 3 oracles sur 22 étaient faux, alors que ChatUniTest les présentait comme réussis.
-- **Les tests écrits à la main ont comblé le reste.** 5 tests ont tué les 19 survivants non équivalents, presque sans changer la couverture : la couverture seule ne dit pas si les vérifications sont fortes. 6 autres ont couvert les 14 méthodes jamais appelées et tué les 99 mutants restants.
-- **Il ne reste que l'irréductible** : 2 mutants équivalents, qu'aucun test ne peut tuer, et la ligne du constructeur implicite, qu'aucun comportement ne justifie de tester.
+- *Outils d'intelligence artificielle* : qwen2.5-coder:3b (équipe Qwen, Alibaba Cloud), exécuté localement avec Ollama 0.35.1 et utilisé par ChatUniTest 2.1.1 comme objet de l'étude, octobre 2026 ; Claude Opus 5.5 (Anthropic, claude.ai), octobre 2026 ; Claude Code [modèle] (Anthropic), octobre 2026 ;
+- *Méthodologie* : Claude a aidé à choisir les classes et à configurer pitest, Ollama et ChatUniTest, et a relevé dans le code de ChatUniTest les contraintes décrites à la section 2 ;
+- *Méthode de collecte des données* : nous avons exécuté toutes les générations et mesures ; Claude Code a configuré pitest pour exécuter un mutant par JVM ;
+- *Exécution* : Claude (claude.ai et Claude Code) a corrigé les tests générés et écrit la GitHub Action ; nous avons écrit les tests de la section 6 à partir de la liste des mutants survivants, analysée par Claude ;
+- *Analyse des données* : Claude a associé les mutants aux lignes de code ;
+- *Rédaction – Révision et édition* : Claude a proposé la structure de ce README et a rédigé les tableaux, les extraits de configuration, les commandes et les sections descriptives à partir de nos rapports ; nous avons rédigé les sections d'analyse (justification, critique des tests générés, comparaison des oracles, explication des mutants, documentation des tests) ; Claude les a traduites de l'anglais au français ;
+- *Confidentialité et sécurité* : seul du code source libre a été partagé avec les outils, aucune donnée personnelle.
