@@ -246,7 +246,7 @@ Exécution réussie : [n° 38191835771](https://github.com/LucBrennan/tika/actio
 
 ## 8. Déclaration d'utilisation de l'IA
 
-- *Outils d'intelligence artificielle* : qwen2.5-coder:3b (équipe Qwen, Alibaba Cloud), exécuté localement avec Ollama 0.35.1 et utilisé par ChatUniTest 2.1.1 comme objet de l'étude, octobre 2026 ; Claude Opus 5.5 (Anthropic, claude.ai), octobre 2026 ; Claude Code [modèle] (Anthropic), octobre 2026 ;
+- *Outils d'intelligence artificielle* : qwen2.5-coder:3b (équipe Qwen, Alibaba Cloud), exécuté localement avec Ollama 0.35.1 et utilisé par ChatUniTest 2.1.1 comme objet de l'étude, octobre 2026 ; Claude Opus 5.5 (Anthropic, claude.ai), octobre 2026 ; (Claude Opus 5.5, Anthropic), octobre 2026 ;
 - *Méthodologie* : Claude a aidé à choisir les classes et à configurer pitest, Ollama et ChatUniTest, et a relevé dans le code de ChatUniTest les contraintes décrites à la section 2 ;
 - *Méthode de collecte des données* : nous avons exécuté toutes les générations et mesures ; Claude Code a configuré pitest pour exécuter un mutant par JVM ;
 - *Exécution* : Claude (claude.ai et Claude Code) a corrigé les tests générés et écrit la GitHub Action ; nous avons écrit les tests de la section 6 à partir de la liste des mutants survivants, analysée par Claude ;
