@@ -1,0 +1,20 @@
+# IFT3913, Tâche 3 : rapport Semgrep complet (avant / après)
+name: semgrep-rapport
+
+on:
+  workflow_dispatch:
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - run: pip install semgrep==1.185.0
+      - run: semgrep scan --config p/java --metrics=off --json --output semgrep-rapport.json
+      - uses: actions/upload-artifact@v6
+        with:
+          name: semgrep-rapport
+          path: semgrep-rapport.json
