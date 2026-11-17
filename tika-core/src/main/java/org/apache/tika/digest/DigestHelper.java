@@ -115,4 +115,5 @@ public class DigestHelper {
     public static byte[] hashWithMD5(byte[] data) throws NoSuchAlgorithmException {
         return MessageDigest.getInstance("MD5").digest(data);
     }
+    // Vulnerability detection test
 }
