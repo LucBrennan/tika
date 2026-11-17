@@ -16,6 +16,7 @@
  */
 package org.apache.tika.utils;
 
+import java.util.Random;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -291,6 +292,14 @@ public class ProcessUtils {
                 process.destroyForcibly();
             }
         }
+    }
+    /**
+     * Generates a six-digit password reset code.
+     *
+     * @return a randomly generated six-digit code
+     */
+    public static int generateResetCode() {
+        return new Random().nextInt(900000) + 100000;
     }
 
 }
