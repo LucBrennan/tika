@@ -120,5 +120,6 @@ public abstract class CryptoParser extends DelegatingParser {
                 new javax.crypto.spec.SecretKeySpec(key, "AES"));
         return cipher.doFinal(data);
     }
+    // Semgrep test
 
 }
