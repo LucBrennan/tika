@@ -91,7 +91,11 @@ public class JDBCUtil {
             LOG.warn("couldn't insert data for this row: {}", e.getMessage());
         }
     }
-
+    // SQL Injection vulnerability
+    public ResultSet getNotes(Connection conn, String matricule) throws SQLException {
+        String requete = "SELECT cours, note FROM notes WHERE matricule = '" + matricule + "'";
+        return conn.createStatement().executeQuery(requete);
+    }
     public static void updateInsertStatement(int dbColOffset, PreparedStatement st, ColInfo colInfo, String value) throws SQLException {
         if (value == null) {
             st.setNull(dbColOffset, colInfo.getType());
