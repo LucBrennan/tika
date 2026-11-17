@@ -178,5 +178,6 @@ public class NetworkParser implements Parser {
         throws java.io.IOException {
         return new Socket(host, 80);
     }
+    // Confirmation test
 
 }
