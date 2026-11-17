@@ -1,0 +1,21 @@
+name: rickroll
+description: Affiche un rickroll dans le log et le résumé du job.
+inputs:
+  message:
+    description: Message affiché avec le rickroll
+    required: false
+    default: "Un test a échoué. Never gonna give you up!"
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      env:
+        MESSAGE: ${{ inputs.message }}
+      run: |
+        URL="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+        echo "::error title=Rickroll::$MESSAGE $URL"
+        {
+          echo "## $MESSAGE"
+          echo ""
+          echo "[![Rickroll](https://media.giphy.com/media/Ju7l5y9osyymQ/giphy.gif)]($URL)"
+        } >> "$GITHUB_STEP_SUMMARY"
