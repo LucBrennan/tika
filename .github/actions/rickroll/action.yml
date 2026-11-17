@@ -4,7 +4,7 @@ inputs:
   message:
     description: Message affiché avec le rickroll
     required: false
-    default: "Un test a échoué. Never gonna give you up!"
+    default: "rapport de diagnostic de l'echec"
 runs:
   using: composite
   steps:

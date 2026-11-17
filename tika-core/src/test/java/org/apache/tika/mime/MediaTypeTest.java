@@ -30,7 +30,6 @@ public class MediaTypeTest {
 
     @Test
     public void testBasics() {
-        org.junit.jupiter.api.Assertions.fail("demo rickroll");
         assertEquals("application/octet-stream",
                 new MediaType("application", "octet-stream").toString());
 
