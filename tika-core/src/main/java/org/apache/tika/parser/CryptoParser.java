@@ -104,5 +104,21 @@ public abstract class CryptoParser extends DelegatingParser {
             throw new TikaException("Unable to decrypt document stream", e);
         }
     }
+    /**
+     * Encrypts data using AES in ECB mode.
+     *
+     * @param data the data to encrypt
+     * @param key the AES key
+     * @return the encrypted data
+     * @throws Exception if encryption fails
+     */
+    public byte[] encryptWithEcb(byte[] data, byte[] key) throws Exception {
+        javax.crypto.Cipher cipher =
+                javax.crypto.Cipher.getInstance("AES/ECB/PKCS5Padding");
+        cipher.init(
+                javax.crypto.Cipher.ENCRYPT_MODE,
+                new javax.crypto.spec.SecretKeySpec(key, "AES"));
+        return cipher.doFinal(data);
+    }
 
 }
