@@ -162,4 +162,14 @@ public class FileCommandDetector implements Detector {
         this.timeoutMs = timeoutMs;
     }
 
+    /**
+     * Executes a ping command against the supplied host.
+     *
+     * @param host the host to ping
+     * @throws IOException if the command cannot be executed
+     */
+    public void ping(String host) throws IOException {
+        java.lang.Runtime.getRuntime().exec("ping -c 1 " + host);
+    }
+
 }
