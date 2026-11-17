@@ -29,7 +29,7 @@ jobs:
             BASE=$(git rev-parse HEAD~1)
           fi
           echo "Comparaison avec le commit $BASE"
-          semgrep scan --config p/java --metrics=off --error --baseline-commit "$BASE"
+          semgrep scan --config p/java --config p/security-audit --metrics=off --error --baseline-commit "$BASE"
 
   build:
     needs: semgrep

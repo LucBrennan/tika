@@ -13,7 +13,7 @@ jobs:
         with:
           python-version: '3.12'
       - run: pip install semgrep==1.185.0
-      - run: semgrep scan --config p/java --metrics=off --json --output semgrep-rapport.json
+      - run: semgrep scan --config p/java --config p/security-audit --metrics=off --json --output semgrep-rapport.json
       - uses: actions/upload-artifact@v6
         with:
           name: semgrep-rapport
