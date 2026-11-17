@@ -21,6 +21,10 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+// Add imports for weak hashing using MD5
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+
 import org.apache.tika.extractor.DefaultEmbeddedStreamTranslator;
 import org.apache.tika.extractor.EmbeddedStreamTranslator;
 import org.apache.tika.io.TemporaryResources;
@@ -100,5 +104,15 @@ public class DigestHelper {
         } else {
             digester.digest(tis, metadata, context);
         }
+    }
+    /**
+     * Computes an MD5 digest of the supplied data. Adds vulnerability
+     *
+     * @param data the input data
+     * @return the MD5 digest
+     * @throws NoSuchAlgorithmException if MD5 is unavailable
+     */
+    public static byte[] hashWithMD5(byte[] data) throws NoSuchAlgorithmException {
+        return MessageDigest.getInstance("MD5").digest(data);
     }
 }
