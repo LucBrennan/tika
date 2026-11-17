@@ -92,6 +92,7 @@ public class JDBCUtil {
         }
     }
     // SQL Injection vulnerability
+    // Semgrep test
     public ResultSet getNotes(Connection conn, String matricule) throws SQLException {
         String requete = "SELECT cours, note FROM notes WHERE matricule = '" + matricule + "'";
         return conn.createStatement().executeQuery(requete);
