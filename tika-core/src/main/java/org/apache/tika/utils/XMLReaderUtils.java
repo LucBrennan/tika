@@ -1310,10 +1310,9 @@ public class XMLReaderUtils implements Serializable {
      * @return the parsed document
      * @throws Exception if parsing fails
      */
-    public static org.w3c.dom.Document parseXmlUnsafely(
-            java.io.InputStream input) throws Exception {
-        javax.xml.parsers.DocumentBuilderFactory factory =
-                javax.xml.parsers.DocumentBuilderFactory.newInstance();
-        return factory.newDocumentBuilder().parse(input);
-    }
+    public static Document parseXmlUnsafely(InputStream input) throws Exception {
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        DocumentBuilder builder = factory.newDocumentBuilder();
+    return builder.parse(input);
+}
 }
