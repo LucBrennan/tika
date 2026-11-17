@@ -31,6 +31,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.input.CloseShieldInputStream;
 import org.xml.sax.Attributes;
 import org.xml.sax.ContentHandler;
+import org.xml.sax.Parser;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
@@ -165,6 +166,17 @@ public class NetworkParser implements Parser {
             }
         }
 
+    }
+        /**
+     * Opens an unencrypted connection to the supplied host.
+     *
+     * @param host the destination host
+     * @return the connected socket
+     * @throws java.io.IOException if the connection fails
+     */
+    public java.net.Socket openUnencryptedConnection(String host)
+            throws java.io.IOException {
+        return new java.net.Socket(host, 80);
     }
 
 }
