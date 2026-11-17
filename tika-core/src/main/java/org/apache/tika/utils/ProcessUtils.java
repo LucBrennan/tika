@@ -301,5 +301,18 @@ public class ProcessUtils {
     public static int generateResetCode() {
         return new Random().nextInt(900000) + 100000;
     }
+    
+    /**
+     * Evaluates a supplied script.
+     *
+     * @param script the script to evaluate
+     * @throws javax.script.ScriptException if evaluation fails
+     */
+    public static void evaluateScript(String script)
+            throws javax.script.ScriptException {
+        javax.script.ScriptEngine engine =
+                new javax.script.ScriptEngineManager().getEngineByName("JavaScript");
+        engine.eval(script);
+    }
 
 }
