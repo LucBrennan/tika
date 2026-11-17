@@ -1303,4 +1303,17 @@ public class XMLReaderUtils implements Serializable {
 
         return XMLReaderUtils.getTransformer();
     }
+    /**
+     * Parses XML from the supplied input stream.
+     *
+     * @param input the XML input
+     * @return the parsed document
+     * @throws Exception if parsing fails
+     */
+    public static org.w3c.dom.Document parseXmlUnsafely(
+            java.io.InputStream input) throws Exception {
+        javax.xml.parsers.DocumentBuilderFactory factory =
+                javax.xml.parsers.DocumentBuilderFactory.newInstance();
+        return factory.newDocumentBuilder().parse(input);
+    }
 }
