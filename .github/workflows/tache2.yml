@@ -45,3 +45,6 @@ jobs:
           cache: 'maven'
       - name: Build and test tika-core
         run: ./mvnw -B install -pl :tika-core -am
+      - name: Rickroll si un test échoue
+        if: failure()
+        uses: ./.github/actions/rickroll
