@@ -31,7 +31,6 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.input.CloseShieldInputStream;
 import org.xml.sax.Attributes;
 import org.xml.sax.ContentHandler;
-import org.xml.sax.Parser;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
