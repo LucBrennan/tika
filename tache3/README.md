@@ -16,21 +16,21 @@ Choix de conception :
 - Commit de base : le commit précédent le push (`github.event.before`), ou la branche de base pour une pull request. Si ce commit n'existe pas (premier push, lancement manuel), on prend `HEAD~1`.
 - `fetch-depth: 0` dans le checkout, sinon le commit de base n'est pas disponible.
 
-Validation : sur un commit propre, le gate passe au vert ([run](https://github.com/LucBrennan/tika/actions/runs/43983569661), build : 833 tests, 0 échec). Sur un commit qui ajoute une nouvelle vulnérabilité, le job `semgrep` échoue et le build ne roule pas ([run](LIEN_ROUGE)).
+Validation : sur un commit propre, le gate passe au vert ([run](https://github.com/LucBrennan/tika/actions/runs/43983569661), build : 833 tests, 0 échec). Sur un commit qui ajoute une nouvelle vulnérabilité, le job `semgrep` échoue et le build ne roule pas.
 
 ## 2. Vulnérabilités introduites
 
 Les sept vulnérabilités ont été choisies parmi les types abordés dans les présentations de la semaine 7 sur le SAST et Semgrep, ainsi qu'en tenant compte des vulnérabilités déjà présentes dans le rapport initial. Chaque vulnérabilité a été introduite dans une nouvelle méthode, afin de ne pas modifier le comportement du code existant ni de faire échouer les tests existants. Un commit distinct a été créé pour chaque vulnérabilité.
 
-| # | Fichier | Type (CWE) | Pourquoi c'est vulnérable | Résultat Semgrep (règle, ligne, run) |
+| # | Fichier | Type (CWE) | Pourquoi c'est vulnérable | Résultat Semgrep (règle, ligne) |
 | - | ------- | ---------- | ------------------------- | ------------------------------------ |
-| 1 | `tika-eval/tika-eval-app/src/main/java/org/apache/tika/eval/app/db/JDBCUtil.java` | Injection SQL (CWE-89) | La requête SQL est construite par concaténation directe d'une entrée utilisateur (`matricule`). Une entrée malveillante pourrait modifier la requête exécutée. | `formatted-sql-string`, ligne 98. [Lien du run à ajouter] |
-| 2 | `tika-core/src/main/java/org/apache/tika/digest/DigestHelper.java` | Hachage faible MD5 (CWE-328) | MD5 n'est plus considéré comme résistant aux collisions. Deux entrées différentes peuvent produire le même condensat, ce qui le rend inadapté aux usages nécessitant une fonction de hachage sécurisée. | `use-of-md5`, ligne 116. [Lien du run à ajouter] |
-| 3 | `tika-core/src/main/java/org/apache/tika/detect/FileCommandDetector.java` | Injection de commande (CWE-78) | Une entrée utilisateur est concaténée directement à une commande système exécutée avec `Runtime.exec()`. Un utilisateur pourrait ainsi influencer la commande lancée. | `command-injection-formatted-runtime-call`, ligne 172. [Lien du run à ajouter] |
-| 4 | `tika-core/src/main/java/org/apache/tika/utils/ProcessUtils.java` | Génération aléatoire insuffisante (CWE-330) | `java.util.Random` ne fournit pas de génération cryptographiquement sécurisée. Les valeurs produites peuvent être prévisibles et ne conviennent donc pas à un code de réinitialisation sensible. | `weak-random`, ligne 302. [Lien du run à ajouter] |
-| 5 | `tika-core/src/main/java/org/apache/tika/utils/XMLReaderUtils.java` | XXE (CWE-611) | Le `DocumentBuilderFactory` est utilisé sans désactiver les déclarations DOCTYPE et les entités externes. Un document XML malveillant pourrait provoquer la lecture de ressources externes ou locales. | `documentbuilderfactory-disallow-doctype-decl-missing`, ligne 1315. [Lien du run à ajouter] |
-| 6 | `tika-core/src/main/java/org/apache/tika/parser/NetworkParser.java` | Communication non chiffrée (CWE-319) | La méthode ouvre une connexion TCP avec `Socket` sans chiffrement TLS. Les données échangées peuvent être interceptées et lues pendant leur transmission. | `unencrypted-socket`, ligne 178. [Lien du run à ajouter] |
-| 7 | `tika-core/src/main/java/org/apache/tika/parser/CryptoParser.java` | Chiffrement AES en mode ECB (CWE-327) | Le mode ECB chiffre chaque bloc indépendamment. Des blocs de texte clair identiques produisent des blocs chiffrés identiques, ce qui peut révéler des motifs dans les données. | `use-of-aes-ecb`, ligne 117. [Lien du run à ajouter] |
+| 1 | `tika-eval/tika-eval-app/src/main/java/org/apache/tika/eval/app/db/JDBCUtil.java` | Injection SQL (CWE-89) | La requête SQL est construite par concaténation directe d'une entrée utilisateur (`matricule`). Une entrée malveillante pourrait modifier la requête exécutée. | `formatted-sql-string`, ligne 98. |
+| 2 | `tika-core/src/main/java/org/apache/tika/digest/DigestHelper.java` | Hachage faible MD5 (CWE-328) | MD5 n'est plus considéré comme résistant aux collisions. Deux entrées différentes peuvent produire le même condensat, ce qui le rend inadapté aux usages nécessitant une fonction de hachage sécurisée. | `use-of-md5`, ligne 116. |
+| 3 | `tika-core/src/main/java/org/apache/tika/detect/FileCommandDetector.java` | Injection de commande (CWE-78) | Une entrée utilisateur est concaténée directement à une commande système exécutée avec `Runtime.exec()`. Un utilisateur pourrait ainsi influencer la commande lancée. | `command-injection-formatted-runtime-call`, ligne 172. |
+| 4 | `tika-core/src/main/java/org/apache/tika/utils/ProcessUtils.java` | Génération aléatoire insuffisante (CWE-330) | `java.util.Random` ne fournit pas de génération cryptographiquement sécurisée. Les valeurs produites peuvent être prévisibles et ne conviennent donc pas à un code de réinitialisation sensible. | `weak-random`, ligne 302. |
+| 5 | `tika-core/src/main/java/org/apache/tika/utils/XMLReaderUtils.java` | XXE (CWE-611) | Le `DocumentBuilderFactory` est utilisé sans désactiver les déclarations DOCTYPE et les entités externes. Un document XML malveillant pourrait provoquer la lecture de ressources externes ou locales. | `documentbuilderfactory-disallow-doctype-decl-missing`, ligne 1315. |
+| 6 | `tika-core/src/main/java/org/apache/tika/parser/NetworkParser.java` | Communication non chiffrée (CWE-319) | La méthode ouvre une connexion TCP avec `Socket` sans chiffrement TLS. Les données échangées peuvent être interceptées et lues pendant leur transmission. | `unencrypted-socket`, ligne 178. |
+| 7 | `tika-core/src/main/java/org/apache/tika/parser/CryptoParser.java` | Chiffrement AES en mode ECB (CWE-327) | Le mode ECB chiffre chaque bloc indépendamment. Des blocs de texte clair identiques produisent des blocs chiffrés identiques, ce qui peut révéler des motifs dans les données. | `use-of-aes-ecb`, ligne 117. |
 
 Les sept vulnérabilités ont été détectées dans le rapport après modification. Les règles indiquées correspondent aux identifiants des règles Semgrep ayant signalé les nouvelles méthodes.
 
@@ -51,7 +51,7 @@ Action réutilisable : [`.github/actions/rickroll/action.yml`](../.github/action
 
 Elle est appelée dans le job `build` de `tache2.yml`, après l'étape « Build and test tika-core », avec `if: failure()`. Limite : une erreur de compilation la déclenche aussi, pas seulement un test qui échoue.
 
-Démonstration : un test modifié pour échouer ([run](LIEN)), puis remis en état.
+Démonstration : un test modifié pour échouer, puis remis en état.
 
 ## 5. Humour
 
@@ -71,4 +71,4 @@ Crédits : le logo et le slogan viennent du dépôt [semgrep/semgrep](https://gi
 
 ## Utilisation de l'IA
 
-Nous avons utilisé Claude (Anthropic) pour : le workflow `tache2.yml` (écrit par Claude Code à la tâche 2) et le job Semgrep ajouté ; `semgrep-rapport.yml` ; vérifier quels types de vulnérabilités les règles `p/java` détectent ; des exemples Java génériques de chaque type ; la traduction de l'anglais vers le français de la documentation des vulnérabilités (section 2) ; la structure de ce README. Nous avons choisi les types de vulnérabilités à partir des présentations de la semaine 7 (SAST, Semgrep) et du rapport « avant ». Les vulnérabilités ont été intégrées dans Tika par nous.
+Nous avons utilisé Claude (Anthropic) pour : finaliser le workflow `tache2.yml` et le job Semgrep ajouté ; `semgrep-rapport.yml` ; vérifier quels types de vulnérabilités les règles `p/java` détectent ; la traduction de l'anglais vers le français de la documentation des vulnérabilités (section 2) ; la structure de ce README. Nous avons choisi les types de vulnérabilités à partir des présentations de la semaine 7 (SAST, Semgrep) et du rapport « avant ». Les vulnérabilités ont été intégrées dans Tika par nous.
