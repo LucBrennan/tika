@@ -41,7 +41,12 @@ Rapports complets produits par le workflow manuel [`semgrep-rapport.yml`](../.gi
 - Avant nos vulnérabilités (`p/java` seul) : [`prevulnerabilitysemgrep.json`](prevulnerabilitysemgrep.json), 11 résultats.
 - Dépôt actuel (`p/java` + `p/security-audit`) : [`postvulnerabilitysemgrep.json`](postvulnerabilitysemgrep.json), 26 résultats.
 
-La hausse vient de deux choses : nos 7 nouvelles vulnérabilités, et l'ajout de `p/security-audit`, qui signale aussi du code d'origine de Tika (règles non présentes dans `p/java` gratuit). Le gate (section 1) isole les **nouvelles** vulnérabilités grâce à `--baseline-commit`, qui ne compare qu'avec le commit précédent ; c'est ce qui montre que chacune de nos 7 vulnérabilités fait échouer le build.
+L'écart de 11 à 26 recouvre deux choses distinctes :
+
+- **Nos 7 vulnérabilités**, exactement celles de la section 2 : `formatted-sql-string` (JDBCUtil, ligne 98), `use-of-md5` (DigestHelper, 116), `command-injection-formatted-runtime-call` (FileCommandDetector, 172), `weak-random` (ProcessUtils, 302), `documentbuilderfactory-disallow-doctype-decl-missing` (XMLReaderUtils, 1315), `unencrypted-socket` (NetworkParser, 178) et `use-of-aes-ecb` (CryptoParser, 117).
+- **Le reste de l'écart n'est pas de nous** : ce sont des règles de `p/security-audit` qui signalent du code d'origine de Tika (p. ex. `insecure-hostname-verifier` dans HttpClientFactory, `bad-hexa-conversion` dans AtlassianJwtGenerator, et des règles sur des fichiers Python et Handlebars). Elles n'apparaissent que parce que le rapport « avant » a été généré avec `p/java` seul ; elles ne correspondent à aucune modification de notre part.
+
+Pour isoler proprement nos 7 ajouts, c'est le gate (section 1) qui fait foi : avec `--baseline-commit`, il compare deux commits avec le **même** jeu de règles et échoue sur chaque nouvelle vulnérabilité.
 
 Les résultats d'origine viennent du code de Tika ; plusieurs sont probablement des faux positifs (par exemple, le format HWP impose AES/ECB).
 
